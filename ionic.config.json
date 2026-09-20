@@ -1,0 +1,7 @@
+{
+  "name": "TrekkMe",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
