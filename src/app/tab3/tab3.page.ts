@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonBreadcrumbs, IonBreadcrumb } from '@ionic/angular';
+import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular';
+import { BreadcrumbsComponent } from '../components/breadcrumbs/breadcrumbs.component';
 import { RouterLink } from '@angular/router';
 import { ExploreContainerComponent } from '../explore-container/explore-container.component';
 
@@ -7,7 +8,7 @@ import { ExploreContainerComponent } from '../explore-container/explore-containe
   selector: 'app-tab3',
   templateUrl: 'tab3.page.html',
   styleUrls: ['tab3.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, ExploreContainerComponent, IonBreadcrumbs, IonBreadcrumb, RouterLink],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, ExploreContainerComponent, BreadcrumbsComponent, RouterLink],
 })
 export class Tab3Page {
   constructor() {}

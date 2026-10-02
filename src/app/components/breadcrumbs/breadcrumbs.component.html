@@ -1,0 +1,5 @@
+<ion-breadcrumbs>
+  @for (miga of historial.migas(); track miga.url) {
+    <ion-breadcrumb [routerLink]="miga.url">{{ miga.nombre }}</ion-breadcrumb>
+  }
+</ion-breadcrumbs>
