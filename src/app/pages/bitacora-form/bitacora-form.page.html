@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/bitacora"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ id !== null ? 'Editar registro' : 'Nuevo registro' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <ion-spinner></ion-spinner>
+    <p>Cargando registro...</p>
+  } @else if (error() !== '') {
+    <ion-text color="danger">
+      <p>{{ error() }}</p>
+    </ion-text>
+  } @else {
+    <ion-textarea
+      label="¿Qué pasó en terreno?"
+      labelPlacement="stacked"
+      [autoGrow]="true"
+      [(ngModel)]="texto"
+    ></ion-textarea>
+
+    <!-- Deshabilitado si el texto está vacío o si ya se está guardando -->
+    <ion-button
+      expand="block"
+      [disabled]="texto().trim() === '' || guardando()"
+      (click)="guardar()"
+    >
+      {{ guardando() ? 'Guardando...' : 'Guardar' }}
+    </ion-button>
+  }
+</ion-content>
