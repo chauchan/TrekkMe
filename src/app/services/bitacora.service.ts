@@ -21,7 +21,7 @@ import { RESCATISTA_ACTUAL } from '../models/rescatista';
 // Nombre de la colección en Firestore
 const COLECCION = 'bitacora';
 
-// Este es el ÚNICO archivo que habla con Firestore
+// Habla con Firestore para todo lo que tiene que ver con la bitácora
 @Injectable({
   providedIn: 'root',
 })
