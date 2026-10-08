@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Casos asignados</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <!-- 1. Cargando -->
+    <ion-spinner></ion-spinner>
+    <p>Cargando casos...</p>
+  } @else if (error() !== '') {
+    <!-- 2. Hubo un error -->
+    <ion-text color="danger">
+      <p>{{ error() }}</p>
+    </ion-text>
+    <ion-button (click)="cargar()">Reintentar</ion-button>
+  } @else if (casos().length === 0) {
+    <!-- 3. No hay casos -->
+    <p>No tienes casos asignados.</p>
+  } @else {
+    <!-- 4. Lista de casos -->
+    <ion-list>
+      @for (caso of casos(); track caso.id) {
+        <ion-item>
+          <ion-label>
+            <h2 class="ion-text-wrap">{{ caso.excursionista }}</h2>
+            <p>{{ caso.ruta }}</p>
+            <p>Caso: {{ caso.id }}</p>
+            <!-- Si ya se pidió el cierre, se avisa que falta la confirmación -->
+            @if (caso.estado !== estadoEnOperativo) {
+              <ion-badge color="warning">Cierre pendiente de Carabineros</ion-badge>
+            }
+          </ion-label>
+          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', caso.id, 'bitacora']">Bitácora</ion-button>
+          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', caso.id]">Ficha</ion-button>
+          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', caso.id, 'terreno']">Terreno</ion-button>
+          <!-- Solo se puede pedir el cierre si el caso sigue en operativo -->
+          @if (caso.estado === estadoEnOperativo) {
+            <ion-button slot="end" fill="clear" color="danger" (click)="confirmarCierre(caso)">Cerrar caso</ion-button>
+          }
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

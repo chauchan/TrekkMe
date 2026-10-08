@@ -1,0 +1,45 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Bandeja del turno</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <!-- 1. Cargando -->
+    <ion-spinner></ion-spinner>
+    <p>Cargando avisos...</p>
+  } @else if (error() !== '') {
+    <!-- 2. Hubo un error -->
+    <ion-text color="danger">
+      <p>{{ error() }}</p>
+    </ion-text>
+    <ion-button (click)="cargar()">Reintentar</ion-button>
+  } @else if (avisos().length === 0) {
+    <!-- 3. No hay avisos -->
+    <p>No hay avisos activos en la jurisdicción.</p>
+    <ion-button (click)="cargarEjemplos()">Cargar casos de ejemplo</ion-button>
+  } @else {
+    <!-- 4. Lista de avisos: al tocar uno se abre su detalle -->
+    <ion-list>
+      @for (aviso of avisos(); track aviso.id) {
+        <ion-item [routerLink]="['/carabinero/aviso', aviso.id]" detail="true">
+          <ion-label>
+            <h2>{{ aviso.excursionista }}</h2>
+            <p>{{ aviso.ruta }}</p>
+            <p>Retorno comprometido: {{ aviso.retornoAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+          </ion-label>
+          <ion-badge slot="end" [color]="colorEstado(aviso.estado)">
+            {{ aviso.estado }}
+          </ion-badge>
+        </ion-item>
+      }
+    </ion-list>
+
+    <!-- Para la demo: vuelve a dejar los avisos de ejemplo como al principio -->
+    <ion-button fill="clear" (click)="cargarEjemplos()">Reiniciar casos de ejemplo</ion-button>
+  }
+</ion-content>

@@ -1,3 +1,29 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <!-- Menú lateral: se abre con el botón de las tres rayas de cada página -->
+  <ion-menu contentId="contenido">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>TrekkMe</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <!-- ion-menu-toggle cierra el menú al tocar una opción -->
+      <ion-menu-toggle [autoHide]="false">
+        <ion-list>
+          <ion-item routerLink="/login">Cambiar de perfil</ion-item>
+
+          <ion-list-header>Carabinero</ion-list-header>
+          <ion-item routerLink="/carabinero/bandeja">Bandeja del turno</ion-item>
+          <ion-item routerLink="/carabinero/historico">Histórico de avisos</ion-item>
+
+          <ion-list-header>Rescatista</ion-list-header>
+          <ion-item routerLink="/rescatista/casos">Casos asignados</ion-item>
+        </ion-list>
+      </ion-menu-toggle>
+    </ion-content>
+  </ion-menu>
+
+  <!-- Aquí se muestra la página de la ruta actual -->
+  <ion-router-outlet id="contenido"></ion-router-outlet>
 </ion-app>

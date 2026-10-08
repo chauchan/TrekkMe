@@ -1,0 +1,180 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/rescatista/casos"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Ficha de búsqueda</ion-title>
+    <ion-buttons slot="end">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <ion-spinner></ion-spinner>
+    <p>Cargando ficha...</p>
+  } @else if (error() !== '') {
+    <ion-text color="danger">
+      <p>{{ error() }}</p>
+    </ion-text>
+    <ion-button (click)="cargar()">Reintentar</ion-button>
+  } @else if (caso(); as datos) {
+    <!-- "datos" es el caso ya cargado -->
+    <ion-list>
+
+      <!-- 1. Última ubicación: lo más importante para empezar a buscar -->
+      <ion-list-header>Última ubicación registrada</ion-list-header>
+      @if (datos.ultimaLat !== null && datos.ultimaLng !== null) {
+        <ion-item>
+          <ion-label>
+            <p>Coordenadas</p>
+            <h2>{{ datos.ultimaLat }}, {{ datos.ultimaLng }}</h2>
+            <p><a [href]="enlaceMapa(datos.ultimaLat, datos.ultimaLng)" target="_blank">Ver en el mapa</a></p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <p>Registrada el</p>
+            <h2>{{ datos.ultimaUbicacionAt | date: 'dd/MM/yyyy HH:mm' }}</h2>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <p>Batería del teléfono en ese momento</p>
+            <h2>{{ datos.bateria }}%</h2>
+          </ion-label>
+        </ion-item>
+      } @else {
+        <ion-item>
+          <ion-label class="ion-text-wrap">El teléfono del excursionista no alcanzó a enviar ninguna ubicación.</ion-label>
+        </ion-item>
+      }
+
+      <!-- 2. La excursión -->
+      <ion-list-header>Excursión</ion-list-header>
+      <ion-item>
+        <ion-label>
+          <p>Ruta declarada</p>
+          <h2 class="ion-text-wrap">{{ datos.ruta }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Salida</p>
+          <h2>{{ datos.salidaAt | date: 'dd/MM/yyyy HH:mm' }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Retorno comprometido</p>
+          <h2>{{ datos.retornoAt | date: 'dd/MM/yyyy HH:mm' }}</h2>
+          <p>{{ horasDeAtraso(datos.retornoAt) }} horas de atraso</p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Personas en la excursión</p>
+          <!-- Quien creó la excursión más sus acompañantes -->
+          <h2>{{ datos.acompanantes.length + 1 }}</h2>
+        </ion-label>
+      </ion-item>
+
+      <!-- 3. La persona que creó la excursión -->
+      <ion-list-header>Excursionista</ion-list-header>
+      <ion-item>
+        <ion-label>
+          <p>Nombre y edad</p>
+          <h2>{{ datos.excursionista }}, {{ datos.edad }} años</h2>
+          <p>RUT: {{ datos.rut }}</p>
+          <p>Teléfono: <a [href]="'tel:' + datos.telefono">{{ datos.telefono }}</a></p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Experiencia</p>
+          <h2>{{ datos.experiencia }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Condiciones médicas</p>
+          <h2 class="ion-text-wrap">{{ datos.condicionesMedicas }}</h2>
+        </ion-label>
+      </ion-item>
+
+      <!-- Acompañantes: las demás personas que van en la excursión -->
+      <ion-list-header>Acompañantes</ion-list-header>
+      @if (datos.acompanantes.length === 0) {
+        <ion-item>
+          <ion-label>Va sin acompañantes.</ion-label>
+        </ion-item>
+      }
+      @for (persona of datos.acompanantes; track persona.rut) {
+        <ion-item>
+          <ion-label>
+            <h2>{{ persona.nombre }}, {{ persona.edad }} años</h2>
+            <p>RUT: {{ persona.rut }}</p>
+            <p class="ion-text-wrap">Condiciones médicas: {{ persona.condicionesMedicas }}</p>
+            @if (persona.tieneCuenta) {
+              <!-- Tiene cuenta en la app: conocemos todos sus datos -->
+              <p>Teléfono: <a [href]="'tel:' + persona.telefono">{{ persona.telefono }}</a></p>
+              <p>Experiencia: {{ persona.experiencia }}</p>
+            } @else {
+              <p class="ion-text-wrap">Sin cuenta en la app: datos ingresados por quien creó la excursión.</p>
+            }
+          </ion-label>
+        </ion-item>
+      }
+
+      <!-- 4. Foto y detalle: los agrega el excursionista al crear la excursión, y son opcionales -->
+      <ion-list-header>Foto y detalle</ion-list-header>
+      <ion-item>
+        <ion-label>
+          <p>Foto</p>
+          @if (datos.fotoUrl !== '') {
+            <img [src]="datos.fotoUrl" alt="Foto del excursionista" style="max-width: 220px; border-radius: 8px;" />
+          } @else {
+            <h2>El excursionista no subió una foto.</h2>
+          }
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Detalle escrito por el excursionista</p>
+          @if (datos.detalle !== '') {
+            <h2 class="ion-text-wrap">{{ datos.detalle }}</h2>
+          } @else {
+            <h2>No escribió ningún detalle.</h2>
+          }
+        </ion-label>
+      </ion-item>
+
+      <!-- 5. Equipo -->
+      <ion-list-header>Equipo</ion-list-header>
+      <ion-item>
+        <ion-label>
+          <p>Carpa</p>
+          <h2>{{ datos.llevaCarpa ? 'Sí, color ' + datos.colorCarpa : 'No lleva' }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Linterna</p>
+          <h2>{{ datos.llevaLinterna ? 'Sí' : 'No lleva' }}</h2>
+        </ion-label>
+      </ion-item>
+
+      <!-- 6. Contacto de confianza -->
+      <ion-list-header>Contacto de confianza</ion-list-header>
+      <ion-item>
+        <ion-label>
+          <h2>{{ datos.contactoNombre }}</h2>
+          <p>Teléfono: <a [href]="'tel:' + datos.contactoTelefono">{{ datos.contactoTelefono }}</a></p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <ion-button expand="block" [routerLink]="['/rescatista/casos', id, 'bitacora']">Ver bitácora del operativo</ion-button>
+  }
+</ion-content>

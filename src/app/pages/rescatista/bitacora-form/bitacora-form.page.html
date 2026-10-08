@@ -1,0 +1,65 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/rescatista/casos/' + casoId + '/bitacora'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ id !== null ? 'Editar registro' : 'Nuevo registro' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <ion-spinner></ion-spinner>
+    <p>Cargando registro...</p>
+  } @else if (error() !== '') {
+    <ion-text color="danger">
+      <p>{{ error() }}</p>
+    </ion-text>
+  } @else {
+    <ion-list>
+      <ion-item>
+        <ion-select label="Ruta" labelPlacement="stacked" placeholder="Elige un sendero" [(ngModel)]="ruta">
+          @for (opcion of rutas; track opcion) {
+            <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="datetime-local"
+          label="Hora de inicio"
+          labelPlacement="stacked"
+          [(ngModel)]="horaInicio"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="datetime-local"
+          label="Hora de fin (vacía si sigue en curso)"
+          labelPlacement="stacked"
+          [(ngModel)]="horaFin"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-textarea
+          label="¿Qué pasó en terreno?"
+          labelPlacement="stacked"
+          [autoGrow]="true"
+          [(ngModel)]="texto"
+        ></ion-textarea>
+      </ion-item>
+    </ion-list>
+
+    <!-- Deshabilitado si falta la ruta, la hora de inicio o el texto, o si ya se está guardando -->
+    <ion-button
+      expand="block"
+      [disabled]="ruta() === '' || horaInicio() === '' || texto().trim() === '' || guardando()"
+      (click)="guardar()"
+    >
+      {{ guardando() ? 'Guardando...' : 'Guardar' }}
+    </ion-button>
+  }
+</ion-content>
