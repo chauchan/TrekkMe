@@ -57,7 +57,7 @@
             <p>{{ textoDistancia(datos) }}</p>
           }
         </ion-label>
-        <ion-button slot="end" fill="clear" [disabled]="buscandoPosicion()" (click)="buscarMiPosicion()">
+        <ion-button slot="end" size="small" fill="clear" [disabled]="buscandoPosicion()" (click)="buscarMiPosicion()">
           Actualizar
         </ion-button>
       </ion-item>
@@ -65,25 +65,25 @@
       <!-- 3. Resumen del caso: lo justo para reconocer a la persona -->
       <ion-list-header>A quién buscamos</ion-list-header>
       <ion-item>
-        <ion-label>
+        <ion-label class="ion-text-wrap">
           <h2>{{ datos.excursionista }}, {{ datos.edad }} años</h2>
           <p>Teléfono: <a [href]="'tel:' + datos.telefono">{{ datos.telefono }}</a></p>
-          <p class="ion-text-wrap">Condiciones médicas: {{ datos.condicionesMedicas }}</p>
+          <p>Condiciones médicas: {{ datos.condicionesMedicas }}</p>
           <p>Personas en la excursión: {{ datos.acompanantes.length + 1 }}</p>
         </ion-label>
       </ion-item>
       @if (datos.fotoUrl !== '') {
         <ion-item>
           <ion-label>
-            <img [src]="datos.fotoUrl" alt="Foto del excursionista" style="max-width: 160px; border-radius: 8px;" />
+            <img [src]="datos.fotoUrl" alt="Foto del excursionista" style="max-width: 100%; width: 160px; border-radius: 8px;" />
           </ion-label>
         </ion-item>
       }
       @if (datos.detalle !== '') {
         <ion-item>
-          <ion-label>
+          <ion-label class="ion-text-wrap">
             <p>Detalle escrito por el excursionista</p>
-            <h2 class="ion-text-wrap">{{ datos.detalle }}</h2>
+            <h2>{{ datos.detalle }}</h2>
           </ion-label>
         </ion-item>
       }

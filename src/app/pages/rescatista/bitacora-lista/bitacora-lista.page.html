@@ -33,18 +33,20 @@
     <ion-list>
       @for (registro of registros(); track registro.id) {
         <ion-item>
-          <ion-label>
+          <ion-label class="ion-text-wrap">
             <!-- Hora de inicio y de fin. Si no hay hora de fin, el tramo sigue en curso -->
             @if (registro.horaFin !== null) {
               <p>{{ registro.horaInicio | date: 'dd/MM/yyyy HH:mm' }} a {{ registro.horaFin | date: 'dd/MM/yyyy HH:mm' }}</p>
             } @else {
               <p>{{ registro.horaInicio | date: 'dd/MM/yyyy HH:mm' }} (en curso)</p>
             }
-            <h2 class="ion-text-wrap">{{ registro.texto }}</h2>
+            <h2>{{ registro.texto }}</h2>
             <p>Ruta: {{ registro.ruta }}</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+              <ion-button size="small" fill="outline" [routerLink]="['/rescatista/casos', casoId, 'bitacora', registro.id]">Editar</ion-button>
+              <ion-button size="small" fill="outline" color="danger" (click)="confirmarEliminar(registro)">Eliminar</ion-button>
+            </div>
           </ion-label>
-          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', casoId, 'bitacora', registro.id]">Editar</ion-button>
-          <ion-button slot="end" fill="clear" color="danger" (click)="confirmarEliminar(registro)">Eliminar</ion-button>
         </ion-item>
       }
     </ion-list>

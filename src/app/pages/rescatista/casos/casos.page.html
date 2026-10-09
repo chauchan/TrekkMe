@@ -26,22 +26,25 @@
     <ion-list>
       @for (caso of casos(); track caso.id) {
         <ion-item>
-          <ion-label>
-            <h2 class="ion-text-wrap">{{ caso.excursionista }}</h2>
+          <ion-label class="ion-text-wrap">
+            <h2>{{ caso.excursionista }}</h2>
             <p>{{ caso.ruta }}</p>
             <p>Caso: {{ caso.id }}</p>
             <!-- Si ya se pidió el cierre, se avisa que falta la confirmación -->
             @if (caso.estado !== estadoEnOperativo) {
               <ion-badge color="warning">Cierre pendiente de Carabineros</ion-badge>
             }
+            <!-- Botones debajo del texto, en varias filas si no caben -->
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+              <ion-button size="small" fill="outline" [routerLink]="['/rescatista/casos', caso.id, 'bitacora']">Bitácora</ion-button>
+              <ion-button size="small" fill="outline" [routerLink]="['/rescatista/casos', caso.id]">Ficha</ion-button>
+              <ion-button size="small" fill="outline" [routerLink]="['/rescatista/casos', caso.id, 'terreno']">Terreno</ion-button>
+              <!-- Solo se puede pedir el cierre si el caso sigue en operativo -->
+              @if (caso.estado === estadoEnOperativo) {
+                <ion-button size="small" fill="outline" color="danger" (click)="confirmarCierre(caso)">Cerrar caso</ion-button>
+              }
+            </div>
           </ion-label>
-          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', caso.id, 'bitacora']">Bitácora</ion-button>
-          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', caso.id]">Ficha</ion-button>
-          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', caso.id, 'terreno']">Terreno</ion-button>
-          <!-- Solo se puede pedir el cierre si el caso sigue en operativo -->
-          @if (caso.estado === estadoEnOperativo) {
-            <ion-button slot="end" fill="clear" color="danger" (click)="confirmarCierre(caso)">Cerrar caso</ion-button>
-          }
         </ion-item>
       }
     </ion-list>
