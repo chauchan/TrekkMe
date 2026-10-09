@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
+  IonBackButton,
   IonButton,
   IonButtons,
   IonContent,
@@ -10,14 +11,15 @@ import {
   IonItem,
   IonLabel,
   IonList,
+  IonMenuButton,
   IonSpinner,
   IonText,
   IonTitle,
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
-import { Bitacora } from '../../models/bitacora';
-import { BitacoraService } from '../../services/bitacora.service';
+import { Bitacora } from '../../../models/bitacora';
+import { BitacoraService } from '../../../services/bitacora.service';
 
 @Component({
   selector: 'app-bitacora-lista',
@@ -26,6 +28,7 @@ import { BitacoraService } from '../../services/bitacora.service';
   imports: [
     DatePipe,
     RouterLink,
+    IonBackButton,
     IonButton,
     IonButtons,
     IonContent,
@@ -33,13 +36,17 @@ import { BitacoraService } from '../../services/bitacora.service';
     IonItem,
     IonLabel,
     IonList,
+    IonMenuButton,
     IonSpinner,
     IonText,
     IonTitle,
     IonToolbar,
   ],
 })
-export class BitacoraListaPage {
+export class BitacoraListaPage implements OnInit {
+
+  // ID del caso al que pertenece esta bitácora (viene en la URL)
+  casoId = '';
 
   // Estado de la pantalla: cuando un signal cambia, la vista se actualiza
   registros = signal<Bitacora[]>([]);
@@ -48,21 +55,27 @@ export class BitacoraListaPage {
 
   constructor(
     private servicio: BitacoraService,
+    private rutaActual: ActivatedRoute,
     private alertas: AlertController,
     private toasts: ToastController
   ) { }
+
+  ngOnInit() {
+    // Lee el :casoId de la URL /rescatista/casos/:casoId/bitacora
+    this.casoId = this.rutaActual.snapshot.paramMap.get('casoId')!;
+  }
 
   // Ionic lo llama cada vez que se entra a la página (también al volver del formulario)
   ionViewWillEnter() {
     this.cargar();
   }
 
-  // Pide los registros al servicio y actualiza los signals
+  // Pide los registros del caso al servicio y actualiza los signals
   cargar() {
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listar().subscribe({
+    this.servicio.listar(this.casoId).subscribe({
       next: (registros) => {
         this.registros.set(registros);
         this.cargando.set(false);

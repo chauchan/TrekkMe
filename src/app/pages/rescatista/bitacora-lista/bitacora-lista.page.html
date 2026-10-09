@@ -1,13 +1,19 @@
 <ion-header>
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/rescatista/casos"></ion-back-button>
+    </ion-buttons>
     <ion-title>Bitácora del operativo</ion-title>
     <ion-buttons slot="end">
-      <ion-button routerLink="/bitacora/nuevo">Nuevo</ion-button>
+      <ion-button [routerLink]="['/rescatista/casos', casoId, 'bitacora', 'nuevo']">Nuevo</ion-button>
+      <ion-menu-button></ion-menu-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+  <p>Caso: {{ casoId }}</p>
+
   @if (cargando()) {
     <!-- 1. Cargando -->
     <ion-spinner></ion-spinner>
@@ -21,17 +27,23 @@
   } @else if (registros().length === 0) {
     <!-- 3. No hay registros -->
     <p>No hay registros en la bitácora.</p>
-    <ion-button routerLink="/bitacora/nuevo">Crear el primero</ion-button>
+    <ion-button [routerLink]="['/rescatista/casos', casoId, 'bitacora', 'nuevo']">Crear el primero</ion-button>
   } @else {
     <!-- 4. Lista de registros -->
     <ion-list>
       @for (registro of registros(); track registro.id) {
         <ion-item>
           <ion-label>
-            <p>{{ registro.registradoAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <!-- Hora de inicio y de fin. Si no hay hora de fin, el tramo sigue en curso -->
+            @if (registro.horaFin !== null) {
+              <p>{{ registro.horaInicio | date: 'dd/MM/yyyy HH:mm' }} a {{ registro.horaFin | date: 'dd/MM/yyyy HH:mm' }}</p>
+            } @else {
+              <p>{{ registro.horaInicio | date: 'dd/MM/yyyy HH:mm' }} (en curso)</p>
+            }
             <h2 class="ion-text-wrap">{{ registro.texto }}</h2>
+            <p>Ruta: {{ registro.ruta }}</p>
           </ion-label>
-          <ion-button slot="end" fill="clear" [routerLink]="['/bitacora', registro.id]">Editar</ion-button>
+          <ion-button slot="end" fill="clear" [routerLink]="['/rescatista/casos', casoId, 'bitacora', registro.id]">Editar</ion-button>
           <ion-button slot="end" fill="clear" color="danger" (click)="confirmarEliminar(registro)">Eliminar</ion-button>
         </ion-item>
       }

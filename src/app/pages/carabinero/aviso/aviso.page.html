@@ -1,0 +1,124 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/carabinero/bandeja"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle del aviso</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <ion-spinner></ion-spinner>
+    <p>Cargando aviso...</p>
+  } @else if (error() !== '') {
+    <ion-text color="danger">
+      <p>{{ error() }}</p>
+    </ion-text>
+    <ion-button (click)="cargar()">Reintentar</ion-button>
+  } @else if (aviso(); as datos) {
+    <!-- "datos" es el aviso ya cargado -->
+    <ion-list>
+      <ion-item>
+        <ion-label>
+          <p>Estado</p>
+          <ion-badge [color]="colorEstado(datos.estado)">{{ datos.estado }}</ion-badge>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Excursionista</p>
+          <h2>{{ datos.excursionista }}</h2>
+          <p>Teléfono: <a [href]="'tel:' + datos.telefono">{{ datos.telefono }}</a></p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Personas en la excursión</p>
+          <h2>{{ datos.acompanantes.length + 1 }}</h2>
+          <!-- Nombres de los acompañantes (los datos médicos solo van en la ficha del rescatista) -->
+          @for (persona of datos.acompanantes; track persona.rut) {
+            <p>Acompañante: {{ persona.nombre }}</p>
+          }
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Ruta declarada</p>
+          <h2 class="ion-text-wrap">{{ datos.ruta }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Salida</p>
+          <h2>{{ datos.salidaAt | date: 'dd/MM/yyyy HH:mm' }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Retorno comprometido</p>
+          <h2>{{ datos.retornoAt | date: 'dd/MM/yyyy HH:mm' }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Contacto de confianza</p>
+          <h2>{{ datos.contactoNombre }}</h2>
+          <p>Teléfono: <a [href]="'tel:' + datos.contactoTelefono">{{ datos.contactoTelefono }}</a></p>
+        </ion-label>
+      </ion-item>
+      <!-- Solo los avisos escalados tienen rescatista -->
+      @if (datos.rescatistaId !== '') {
+        <ion-item>
+          <ion-label>
+            <p>Rescatista asignado</p>
+            <h2>{{ nombreRescatista(datos.rescatistaId) }}</h2>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+
+    @if (datos.estado === estadoEnAlerta) {
+      <!-- En alerta: cerrar como falsa alarma, o elegir un rescatista y escalar -->
+      <ion-text color="danger">
+        <p>El excursionista no confirmó su retorno. Intenta contactarlo y decide qué hacer.</p>
+      </ion-text>
+      <ion-button expand="block" fill="outline" [disabled]="guardando()" (click)="confirmarFalsaAlarma()">
+        Cerrar como falsa alarma
+      </ion-button>
+
+      <ion-item>
+        <ion-select
+          label="Rescatista a cargo del operativo"
+          labelPlacement="stacked"
+          placeholder="Elige un rescatista"
+          [(ngModel)]="rescatistaElegido"
+        >
+          @for (rescatista of rescatistas; track rescatista.id) {
+            <ion-select-option [value]="rescatista.id">{{ rescatista.nombre }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      <!-- No se puede escalar sin elegir rescatista -->
+      <ion-button
+        expand="block"
+        color="danger"
+        [disabled]="rescatistaElegido() === '' || guardando()"
+        (click)="confirmarEscalar()"
+      >
+        Escalar a operativo
+      </ion-button>
+    } @else if (datos.estado === estadoCierrePendiente) {
+      <!-- Cierre pendiente: el rescatista pidió cerrar y el carabinero decide -->
+      <ion-text color="warning">
+        <p>El rescatista informó que encontró a la persona y pidió cerrar el caso.</p>
+      </ion-text>
+      <ion-button expand="block" color="success" [disabled]="guardando()" (click)="confirmarCierre()">
+        Confirmar cierre
+      </ion-button>
+      <ion-button expand="block" fill="outline" color="danger" [disabled]="guardando()" (click)="confirmarRechazo()">
+        Rechazar cierre
+      </ion-button>
+    }
+  }
+</ion-content>

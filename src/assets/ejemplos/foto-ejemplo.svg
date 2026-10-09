@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Foto de ejemplo">
+  <!-- Imagen de relleno para los casos de ejemplo: reemplaza a la foto que subiría el excursionista -->
+  <rect width="200" height="200" fill="#dfe6e1"/>
+  <circle cx="100" cy="78" r="36" fill="#7d9186"/>
+  <path d="M30 200c0-44 31-72 70-72s70 28 70 72z" fill="#7d9186"/>
+  <text x="100" y="192" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#ffffff">Foto de ejemplo</text>
+</svg>
