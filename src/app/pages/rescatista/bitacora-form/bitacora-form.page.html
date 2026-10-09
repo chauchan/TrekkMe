@@ -9,14 +9,16 @@
 
 <ion-content class="ion-padding">
   @if (cargando()) {
-    <ion-spinner></ion-spinner>
-    <p>Cargando registro...</p>
+    <div class="ion-text-center" style="padding-top: 48px;">
+      <ion-spinner color="primary"></ion-spinner>
+      <p>Cargando registro...</p>
+    </div>
   } @else if (error() !== '') {
     <ion-text color="danger">
       <p>{{ error() }}</p>
     </ion-text>
   } @else {
-    <ion-list>
+    <ion-list lines="full" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
       <ion-item>
         <ion-select label="Ruta" labelPlacement="stacked" placeholder="Elige un sendero" [(ngModel)]="ruta">
           @for (opcion of rutas; track opcion) {
@@ -56,6 +58,7 @@
     <!-- Deshabilitado si falta la ruta, la hora de inicio o el texto, o si ya se está guardando -->
     <ion-button
       expand="block"
+      color="tertiary"
       [disabled]="ruta() === '' || horaInicio() === '' || texto().trim() === '' || guardando()"
       (click)="guardar()"
     >
