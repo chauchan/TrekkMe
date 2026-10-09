@@ -65,6 +65,9 @@ yarn-error.log
 testem.log
 /typings
 
+/.claude
+/.vscode
+
 # System files
 .DS_Store
 Thumbs.db
