@@ -12,25 +12,27 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <p>Caso: {{ casoId }}</p>
+  <p style="margin-top: 0;">Caso: {{ casoId }}</p>
 
   @if (cargando()) {
     <!-- 1. Cargando -->
-    <ion-spinner></ion-spinner>
-    <p>Cargando registros...</p>
+    <div class="ion-text-center" style="padding-top: 48px;">
+      <ion-spinner color="primary"></ion-spinner>
+      <p>Cargando registros...</p>
+    </div>
   } @else if (error() !== '') {
     <!-- 2. Hubo un error -->
     <ion-text color="danger">
       <p>{{ error() }}</p>
     </ion-text>
-    <ion-button (click)="cargar()">Reintentar</ion-button>
+    <ion-button color="primary" (click)="cargar()">Reintentar</ion-button>
   } @else if (registros().length === 0) {
     <!-- 3. No hay registros -->
-    <p>No hay registros en la bitácora.</p>
-    <ion-button [routerLink]="['/rescatista/casos', casoId, 'bitacora', 'nuevo']">Crear el primero</ion-button>
+    <p class="ion-text-center" style="padding-top: 48px;">No hay registros en la bitácora.</p>
+    <ion-button color="tertiary" [routerLink]="['/rescatista/casos', casoId, 'bitacora', 'nuevo']">Crear el primero</ion-button>
   } @else {
     <!-- 4. Lista de registros -->
-    <ion-list>
+    <ion-list lines="full" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
       @for (registro of registros(); track registro.id) {
         <ion-item>
           <ion-label class="ion-text-wrap">

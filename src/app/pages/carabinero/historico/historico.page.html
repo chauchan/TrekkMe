@@ -10,24 +10,26 @@
 <ion-content class="ion-padding">
   @if (cargando()) {
     <!-- 1. Cargando -->
-    <ion-spinner></ion-spinner>
-    <p>Cargando histórico...</p>
+    <div class="ion-text-center" style="padding-top: 48px;">
+      <ion-spinner color="primary"></ion-spinner>
+      <p>Cargando histórico...</p>
+    </div>
   } @else if (error() !== '') {
     <!-- 2. Hubo un error -->
     <ion-text color="danger">
       <p>{{ error() }}</p>
     </ion-text>
-    <ion-button (click)="cargar()">Reintentar</ion-button>
+    <ion-button color="primary" (click)="cargar()">Reintentar</ion-button>
   } @else if (avisos().length === 0) {
     <!-- 3. No hay avisos cerrados -->
-    <p>Todavía no hay avisos cerrados.</p>
+    <p class="ion-text-center" style="padding-top: 48px;">Todavía no hay avisos cerrados.</p>
   } @else {
     <!-- 4. Lista de avisos cerrados: al tocar uno se abre su detalle -->
-    <ion-list>
+    <ion-list lines="full" style="border-radius: 8px; overflow: hidden;">
       @for (aviso of avisos(); track aviso.id) {
         <ion-item [routerLink]="['/carabinero/aviso', aviso.id]" detail="true">
-          <ion-label>
-            <h2>{{ aviso.excursionista }}</h2>
+          <ion-label class="ion-text-wrap">
+            <h2 style="font-weight: 600;">{{ aviso.excursionista }}</h2>
             <p>{{ aviso.ruta }}</p>
             <p>Salida: {{ aviso.salidaAt | date: 'dd/MM/yyyy HH:mm' }}</p>
           </ion-label>

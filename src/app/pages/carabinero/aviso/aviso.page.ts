@@ -117,6 +117,9 @@ export class AvisoPage implements OnInit {
     if (estado === ESTADO_CIERRE_PENDIENTE) {
       return 'warning';
     }
+    if (estado === ESTADO_EN_OPERATIVO) {
+      return 'secondary';
+    }
     return 'medium';
   }
 

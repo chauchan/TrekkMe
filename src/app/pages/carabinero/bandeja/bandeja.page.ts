@@ -94,13 +94,16 @@ export class BandejaPage {
     });
   }
 
-  // Color de la etiqueta según el estado: rojo y amarillo son los que piden una acción del carabinero
+  // Color de la etiqueta según el estado: rojo (Alerta) y ámbar (Sol) piden una acción del carabinero
   colorEstado(estado: string): string {
     if (estado === ESTADO_EN_ALERTA) {
       return 'danger';
     }
     if (estado === ESTADO_CIERRE_PENDIENTE) {
       return 'warning';
+    }
+    if (estado === ESTADO_EN_OPERATIVO) {
+      return 'secondary';
     }
     return 'medium';
   }
