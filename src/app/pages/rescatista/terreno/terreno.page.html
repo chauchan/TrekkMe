@@ -12,13 +12,15 @@
 
 <ion-content class="ion-padding">
   @if (cargando()) {
-    <ion-spinner></ion-spinner>
-    <p>Cargando caso...</p>
+    <div class="ion-text-center" style="padding-top: 48px;">
+      <ion-spinner color="primary"></ion-spinner>
+      <p>Cargando caso...</p>
+    </div>
   } @else if (error() !== '') {
     <ion-text color="danger">
       <p>{{ error() }}</p>
     </ion-text>
-    <ion-button (click)="cargar()">Reintentar</ion-button>
+    <ion-button color="primary" (click)="cargar()">Reintentar</ion-button>
   } @else if (caso(); as datos) {
     <!-- "datos" es el caso ya cargado -->
 
@@ -27,7 +29,7 @@
       <iframe
         [src]="mapa()"
         title="Mapa con la última ubicación del excursionista"
-        style="width: 100%; height: 300px; border: 0; border-radius: 8px;"
+        style="width: 100%; height: 300px; border: 0; border-radius: 8px; margin-bottom: 8px;"
       ></iframe>
       <p>
         Última ubicación: {{ datos.ultimaLat }}, {{ datos.ultimaLng }}<br />
@@ -39,10 +41,10 @@
     }
 
     <!-- Vuelve a pedir el caso, por si llegó una ubicación nueva -->
-    <ion-button expand="block" fill="outline" (click)="cargar()">Buscar ubicación nueva</ion-button>
+    <ion-button expand="block" fill="outline" style="margin-bottom: 16px;" (click)="cargar()">Buscar ubicación nueva</ion-button>
 
     <!-- 2. Posición del rescatista -->
-    <ion-list>
+    <ion-list lines="full" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
       <ion-list-header>Mi posición</ion-list-header>
       <ion-item>
         <ion-label class="ion-text-wrap">
@@ -57,7 +59,7 @@
             <p>{{ textoDistancia(datos) }}</p>
           }
         </ion-label>
-        <ion-button slot="end" fill="clear" [disabled]="buscandoPosicion()" (click)="buscarMiPosicion()">
+        <ion-button slot="end" size="small" fill="clear" [disabled]="buscandoPosicion()" (click)="buscarMiPosicion()">
           Actualizar
         </ion-button>
       </ion-item>
@@ -65,32 +67,32 @@
       <!-- 3. Resumen del caso: lo justo para reconocer a la persona -->
       <ion-list-header>A quién buscamos</ion-list-header>
       <ion-item>
-        <ion-label>
+        <ion-label class="ion-text-wrap">
           <h2>{{ datos.excursionista }}, {{ datos.edad }} años</h2>
           <p>Teléfono: <a [href]="'tel:' + datos.telefono">{{ datos.telefono }}</a></p>
-          <p class="ion-text-wrap">Condiciones médicas: {{ datos.condicionesMedicas }}</p>
+          <p>Condiciones médicas: {{ datos.condicionesMedicas }}</p>
           <p>Personas en la excursión: {{ datos.acompanantes.length + 1 }}</p>
         </ion-label>
       </ion-item>
       @if (datos.fotoUrl !== '') {
         <ion-item>
           <ion-label>
-            <img [src]="datos.fotoUrl" alt="Foto del excursionista" style="max-width: 160px; border-radius: 8px;" />
+            <img [src]="datos.fotoUrl" alt="Foto del excursionista" style="max-width: 100%; width: 160px; border-radius: 8px;" />
           </ion-label>
         </ion-item>
       }
       @if (datos.detalle !== '') {
         <ion-item>
-          <ion-label>
+          <ion-label class="ion-text-wrap">
             <p>Detalle escrito por el excursionista</p>
-            <h2 class="ion-text-wrap">{{ datos.detalle }}</h2>
+            <h2>{{ datos.detalle }}</h2>
           </ion-label>
         </ion-item>
       }
     </ion-list>
 
     <!-- 4. Accesos rápidos -->
-    <ion-button expand="block" [routerLink]="['/rescatista/casos', id, 'bitacora', 'nuevo']">
+    <ion-button expand="block" color="tertiary" [routerLink]="['/rescatista/casos', id, 'bitacora', 'nuevo']">
       Anotar en la bitácora
     </ion-button>
     <ion-button expand="block" fill="outline" [routerLink]="['/rescatista/casos', id]">

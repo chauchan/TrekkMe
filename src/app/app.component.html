@@ -10,15 +10,15 @@
     <ion-content>
       <!-- ion-menu-toggle cierra el menú al tocar una opción -->
       <ion-menu-toggle [autoHide]="false">
-        <ion-list>
-          <ion-item routerLink="/login">Cambiar de perfil</ion-item>
+        <ion-list lines="full">
+          <ion-item routerLink="/login" detail="false">Cambiar de perfil</ion-item>
 
-          <ion-list-header>Carabinero</ion-list-header>
-          <ion-item routerLink="/carabinero/bandeja">Bandeja del turno</ion-item>
-          <ion-item routerLink="/carabinero/historico">Histórico de avisos</ion-item>
+          <ion-list-header><ion-label color="medium">CARABINERO</ion-label></ion-list-header>
+          <ion-item routerLink="/carabinero/bandeja" detail="false">Bandeja del turno</ion-item>
+          <ion-item routerLink="/carabinero/historico" detail="false">Histórico de avisos</ion-item>
 
-          <ion-list-header>Rescatista</ion-list-header>
-          <ion-item routerLink="/rescatista/casos">Casos asignados</ion-item>
+          <ion-list-header><ion-label color="medium">RESCATISTA</ion-label></ion-list-header>
+          <ion-item routerLink="/rescatista/casos" detail="false">Casos asignados</ion-item>
         </ion-list>
       </ion-menu-toggle>
     </ion-content>
