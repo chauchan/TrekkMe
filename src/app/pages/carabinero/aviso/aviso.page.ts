@@ -21,15 +21,10 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
-import {
-  ESTADO_CERRADA,
-  ESTADO_CIERRE_PENDIENTE,
-  ESTADO_EN_ALERTA,
-  ESTADO_EN_OPERATIVO,
-  Excursion,
-} from '../../../models/excursion';
-import { RESCATISTAS } from '../../../models/rescatista';
-import { ExcursionService } from '../../../services/excursion.service';
+import { colorEstado } from '../../../core/estados';
+import { Aviso, ESTADO_CIERRE_PENDIENTE, ESTADO_EN_ALERTA } from '../../../models/excursion';
+import { Rescatista } from '../../../models/rescatista';
+import { AvisoService } from './aviso.service';
 
 // Detalle de un aviso. Según su estado, el carabinero puede:
 // - En alerta: cerrarlo como falsa alarma, o escalarlo a operativo asignando un rescatista
@@ -37,6 +32,8 @@ import { ExcursionService } from '../../../services/excursion.service';
 @Component({
   selector: 'app-aviso',
   templateUrl: './aviso.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [AvisoService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -68,19 +65,19 @@ export class AvisoPage implements OnInit {
   estadoCierrePendiente = ESTADO_CIERRE_PENDIENTE;
 
   // Opciones del selector de rescatista
-  rescatistas = RESCATISTAS;
+  rescatistas: Rescatista[] = [];
 
   // Rescatista elegido para asignarle el caso al escalar
   rescatistaElegido = signal('');
 
   // Estado de la pantalla
-  aviso = signal<Excursion | null>(null);
+  aviso = signal<Aviso | null>(null);
   cargando = signal(true);
   guardando = signal(false);
   error = signal('');
 
   constructor(
-    private servicio: ExcursionService,
+    private servicio: AvisoService,
     private rutaActual: ActivatedRoute,
     private alertas: AlertController,
     private toasts: ToastController
@@ -89,6 +86,7 @@ export class AvisoPage implements OnInit {
   ngOnInit() {
     // Lee el :id de la URL /carabinero/aviso/:id
     this.id = this.rutaActual.snapshot.paramMap.get('id')!;
+    this.rescatistas = this.servicio.listarRescatistas();
     this.cargar();
   }
 
@@ -109,23 +107,12 @@ export class AvisoPage implements OnInit {
     this.cargando.set(false);
   }
 
-  // Color de la etiqueta según el estado
-  colorEstado(estado: string): string {
-    if (estado === ESTADO_EN_ALERTA) {
-      return 'danger';
-    }
-    if (estado === ESTADO_CIERRE_PENDIENTE) {
-      return 'warning';
-    }
-    if (estado === ESTADO_EN_OPERATIVO) {
-      return 'secondary';
-    }
-    return 'medium';
-  }
+  // Color de la etiqueta según el estado (función común de core/estados.ts)
+  colorEstado = colorEstado;
 
-  // Busca el nombre de un rescatista en la lista fija
+  // Busca el nombre de un rescatista en la lista que entrega el servicio
   nombreRescatista(id: string): string {
-    for (const rescatista of RESCATISTAS) {
+    for (const rescatista of this.rescatistas) {
       if (rescatista.id === id) {
         return rescatista.nombre;
       }
@@ -143,7 +130,7 @@ export class AvisoPage implements OnInit {
         {
           text: 'Cerrar aviso',
           handler: () => {
-            this.cambiarEstado(ESTADO_EN_ALERTA, ESTADO_CERRADA, 'Aviso cerrado como falsa alarma');
+            this.ejecutar(() => this.servicio.cerrarFalsaAlarma(this.id), 'Aviso cerrado como falsa alarma');
           },
         },
       ],
@@ -162,7 +149,10 @@ export class AvisoPage implements OnInit {
           text: 'Escalar',
           role: 'destructive',
           handler: () => {
-            this.escalar();
+            this.ejecutar(
+              () => this.servicio.escalar(this.id, this.rescatistaElegido()),
+              'Aviso escalado a operativo de búsqueda'
+            );
           },
         },
       ],
@@ -180,7 +170,7 @@ export class AvisoPage implements OnInit {
         {
           text: 'Confirmar cierre',
           handler: () => {
-            this.cambiarEstado(ESTADO_CIERRE_PENDIENTE, ESTADO_CERRADA, 'Caso cerrado');
+            this.ejecutar(() => this.servicio.confirmarCierre(this.id), 'Caso cerrado');
           },
         },
       ],
@@ -199,7 +189,7 @@ export class AvisoPage implements OnInit {
           text: 'Rechazar cierre',
           role: 'destructive',
           handler: () => {
-            this.cambiarEstado(ESTADO_CIERRE_PENDIENTE, ESTADO_EN_OPERATIVO, 'Cierre rechazado: el caso sigue en operativo');
+            this.ejecutar(() => this.servicio.rechazarCierre(this.id), 'Cierre rechazado: el caso sigue en operativo');
           },
         },
       ],
@@ -207,24 +197,12 @@ export class AvisoPage implements OnInit {
     await alerta.present();
   }
 
-  // Escala el aviso a operativo y lo asigna al rescatista elegido
-  async escalar() {
+  // Ejecuta una acción del servicio (cerrar, escalar, confirmar o rechazar),
+  // avisa con un toast y vuelve a cargar el aviso
+  async ejecutar(accion: () => Promise<void>, mensajeExito: string) {
     this.guardando.set(true);
     try {
-      await this.servicio.escalar(this.id, this.rescatistaElegido());
-      await this.avisar('Aviso escalado a operativo de búsqueda', 'success');
-    } catch (error: any) {
-      await this.avisar(error.message, 'danger');
-    }
-    this.guardando.set(false);
-    this.cargar();
-  }
-
-  // Cambia el estado del aviso, avisa con un toast y vuelve a cargarlo
-  async cambiarEstado(estadoEsperado: string, estadoNuevo: string, mensajeExito: string) {
-    this.guardando.set(true);
-    try {
-      await this.servicio.cambiarEstado(this.id, estadoEsperado, estadoNuevo);
+      await accion();
       await this.avisar(mensajeExito, 'success');
     } catch (error: any) {
       await this.avisar(error.message, 'danger');

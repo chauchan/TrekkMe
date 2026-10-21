@@ -15,13 +15,15 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/angular';
-import { ESTADO_CERRADA, Excursion } from '../../../models/excursion';
-import { ExcursionService } from '../../../services/excursion.service';
+import { Aviso } from '../../../models/excursion';
+import { HistoricoService } from './historico.service';
 
 // Histórico: los avisos ya cerrados. Reemplaza el libro de guardia en papel
 @Component({
   selector: 'app-historico',
   templateUrl: './historico.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [HistoricoService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -43,11 +45,11 @@ import { ExcursionService } from '../../../services/excursion.service';
 export class HistoricoPage {
 
   // Estado de la pantalla
-  avisos = signal<Excursion[]>([]);
+  avisos = signal<Aviso[]>([]);
   cargando = signal(true);
   error = signal('');
 
-  constructor(private servicio: ExcursionService) { }
+  constructor(private servicio: HistoricoService) { }
 
   // Ionic lo llama cada vez que se entra a la página
   ionViewWillEnter() {
@@ -59,7 +61,7 @@ export class HistoricoPage {
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listar([ESTADO_CERRADA]).subscribe({
+    this.servicio.listar().subscribe({
       next: (avisos) => {
         this.avisos.set(avisos);
         this.cargando.set(false);

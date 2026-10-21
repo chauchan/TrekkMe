@@ -19,12 +19,13 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
-import { RUTAS } from '../../../models/bitacora';
-import { BitacoraService } from '../../../services/bitacora.service';
+import { BitacoraFormService } from './bitacora-form.service';
 
 @Component({
   selector: 'app-bitacora-form',
   templateUrl: './bitacora-form.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [BitacoraFormService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
@@ -54,7 +55,7 @@ export class BitacoraFormPage implements OnInit {
   id: string | null = null;
 
   // Opciones del selector "Ruta"
-  rutas = RUTAS;
+  rutas: string[] = [];
 
   // Campos del formulario.
   // Las horas se guardan como texto "2026-10-08T14:30", que es el formato del campo de fecha y hora
@@ -72,7 +73,7 @@ export class BitacoraFormPage implements OnInit {
   private versionLeida = 0;
 
   constructor(
-    private servicio: BitacoraService,
+    private servicio: BitacoraFormService,
     private rutaActual: ActivatedRoute,
     private router: Router,
     private toasts: ToastController
@@ -82,6 +83,7 @@ export class BitacoraFormPage implements OnInit {
     // Lee el :casoId y el :id de la URL. En .../bitacora/nuevo no hay id, así que queda null
     this.casoId = this.rutaActual.snapshot.paramMap.get('casoId')!;
     this.id = this.rutaActual.snapshot.paramMap.get('id');
+    this.rutas = this.servicio.listarRutas();
 
     if (this.id !== null) {
       this.cargar(this.id);

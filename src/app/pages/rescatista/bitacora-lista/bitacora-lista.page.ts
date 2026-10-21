@@ -19,11 +19,13 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { Bitacora } from '../../../models/bitacora';
-import { BitacoraService } from '../../../services/bitacora.service';
+import { BitacoraListaService } from './bitacora-lista.service';
 
 @Component({
   selector: 'app-bitacora-lista',
   templateUrl: './bitacora-lista.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [BitacoraListaService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -54,7 +56,7 @@ export class BitacoraListaPage implements OnInit {
   error = signal('');
 
   constructor(
-    private servicio: BitacoraService,
+    private servicio: BitacoraListaService,
     private rutaActual: ActivatedRoute,
     private alertas: AlertController,
     private toasts: ToastController

@@ -17,21 +17,16 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
-import {
-  ESTADO_CIERRE_PENDIENTE,
-  ESTADO_EN_ALERTA,
-  ESTADO_EN_CURSO,
-  ESTADO_EN_OPERATIVO,
-  ESTADO_PLANIFICADA,
-  Excursion,
-} from '../../../models/excursion';
-import { BitacoraService } from '../../../services/bitacora.service';
-import { ExcursionService } from '../../../services/excursion.service';
+import { colorEstado } from '../../../core/estados';
+import { Aviso } from '../../../models/excursion';
+import { BandejaService } from './bandeja.service';
 
 // Bandeja del turno: todos los avisos que todavía no están cerrados
 @Component({
   selector: 'app-bandeja',
   templateUrl: './bandeja.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [BandejaService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -54,13 +49,12 @@ import { ExcursionService } from '../../../services/excursion.service';
 export class BandejaPage {
 
   // Estado de la pantalla
-  avisos = signal<Excursion[]>([]);
+  avisos = signal<Aviso[]>([]);
   cargando = signal(true);
   error = signal('');
 
   constructor(
-    private servicio: ExcursionService,
-    private servicioBitacora: BitacoraService,
+    private servicio: BandejaService,
     private toasts: ToastController
   ) { }
 
@@ -74,15 +68,8 @@ export class BandejaPage {
     this.cargando.set(true);
     this.error.set('');
 
-    const estadosActivos = [
-      ESTADO_PLANIFICADA,
-      ESTADO_EN_CURSO,
-      ESTADO_EN_ALERTA,
-      ESTADO_EN_OPERATIVO,
-      ESTADO_CIERRE_PENDIENTE,
-    ];
 
-    this.servicio.listar(estadosActivos).subscribe({
+    this.servicio.listar().subscribe({
       next: (avisos) => {
         this.avisos.set(avisos);
         this.cargando.set(false);
@@ -94,25 +81,13 @@ export class BandejaPage {
     });
   }
 
-  // Color de la etiqueta según el estado: rojo (Alerta) y ámbar (Sol) piden una acción del carabinero
-  colorEstado(estado: string): string {
-    if (estado === ESTADO_EN_ALERTA) {
-      return 'danger';
-    }
-    if (estado === ESTADO_CIERRE_PENDIENTE) {
-      return 'warning';
-    }
-    if (estado === ESTADO_EN_OPERATIVO) {
-      return 'secondary';
-    }
-    return 'medium';
-  }
+  // Color de la etiqueta según el estado (función común de core/estados.ts)
+  colorEstado = colorEstado;
 
   // Crea los avisos de ejemplo y sus registros de bitácora, y recarga la bandeja
   async cargarEjemplos() {
     try {
       await this.servicio.cargarEjemplos();
-      await this.servicioBitacora.cargarEjemplos();
       const toast = await this.toasts.create({
         message: 'Casos de ejemplo cargados',
         duration: 2000,

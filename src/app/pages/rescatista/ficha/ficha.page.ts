@@ -18,13 +18,15 @@ import {
   IonToolbar,
 } from '@ionic/angular';
 import { Excursion } from '../../../models/excursion';
-import { ExcursionService } from '../../../services/excursion.service';
+import { FichaService } from './ficha.service';
 
 // Ficha de búsqueda: todo lo que el rescatista necesita saber de la persona antes de salir a terreno.
 // Es de solo lectura.
 @Component({
   selector: 'app-ficha',
   templateUrl: './ficha.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [FichaService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -56,7 +58,7 @@ export class FichaPage implements OnInit {
   error = signal('');
 
   constructor(
-    private servicio: ExcursionService,
+    private servicio: FichaService,
     private rutaActual: ActivatedRoute
   ) { }
 
@@ -85,9 +87,7 @@ export class FichaPage implements OnInit {
 
   // Cuántas horas han pasado desde la hora comprometida de retorno (con un decimal)
   horasDeAtraso(retornoAt: Date): number {
-    const milisegundos = Date.now() - retornoAt.getTime();
-    const horas = milisegundos / (60 * 60 * 1000);
-    return Math.round(horas * 10) / 10;
+    return this.servicio.horasDeAtraso(retornoAt);
   }
 
   // Arma el enlace para ver un punto en OpenStreetMap

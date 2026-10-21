@@ -17,19 +17,16 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
-import {
-  ESTADO_CIERRE_PENDIENTE,
-  ESTADO_EN_OPERATIVO,
-  Excursion,
-} from '../../../models/excursion';
-import { RESCATISTA_ACTUAL } from '../../../models/rescatista';
-import { ExcursionService } from '../../../services/excursion.service';
+import { ESTADO_EN_OPERATIVO, Excursion } from '../../../models/excursion';
+import { CasosService } from './casos.service';
 
 // Lista de casos asignados al rescatista actual.
 // Desde cada caso se abre su bitácora, su ficha y su vista de terreno, y se puede pedir el cierre
 @Component({
   selector: 'app-casos',
   templateUrl: './casos.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [CasosService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
@@ -59,7 +56,7 @@ export class CasosPage {
   error = signal('');
 
   constructor(
-    private servicio: ExcursionService,
+    private servicio: CasosService,
     private alertas: AlertController,
     private toasts: ToastController
   ) { }
@@ -74,7 +71,7 @@ export class CasosPage {
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listarCasos(RESCATISTA_ACTUAL).subscribe({
+    this.servicio.listar().subscribe({
       next: (casos) => {
         this.casos.set(casos);
         this.cargando.set(false);
@@ -107,7 +104,7 @@ export class CasosPage {
   // Deja el caso en "Cierre pendiente", avisa con un toast y recarga la lista
   async pedirCierre(caso: Excursion) {
     try {
-      await this.servicio.cambiarEstado(caso.id, ESTADO_EN_OPERATIVO, ESTADO_CIERRE_PENDIENTE);
+      await this.servicio.solicitarCierre(caso.id);
       const toast = await this.toasts.create({
         message: 'Cierre solicitado. Falta la confirmación de Carabineros.',
         duration: 3000,
