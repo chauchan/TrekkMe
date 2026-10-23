@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Api;
 
-use App\Infrastructure\Persistence\Eloquent\Models\AreaModel;
+use App\Models\Area;
 use Database\Seeders\TerritorioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ class TerritorioTest extends TestCase
 
     public function test_lista_las_areas_activas(): void
     {
-        AreaModel::where('nombre', 'PN Nahuelbuta')->update(['activa' => false]);
+        Area::where('nombre', 'PN Nahuelbuta')->update(['activa' => false]);
 
         $this->getJson('/api/areas')
             ->assertOk()
@@ -30,7 +30,7 @@ class TerritorioTest extends TestCase
 
     public function test_lista_los_senderos_de_un_area(): void
     {
-        $nonguen = AreaModel::where('nombre', 'PN Nonguén')->first();
+        $nonguen = Area::where('nombre', 'PN Nonguén')->first();
 
         $this->getJson("/api/areas/{$nonguen->id}/senderos")
             ->assertOk()
@@ -41,8 +41,6 @@ class TerritorioTest extends TestCase
 
     public function test_area_inexistente_responde_404(): void
     {
-        $this->getJson('/api/areas/999/senderos')
-            ->assertNotFound()
-            ->assertJsonPath('message', 'No existe el área 999.');
+        $this->getJson('/api/areas/999/senderos')->assertNotFound();
     }
 }

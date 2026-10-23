@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Domain\Excursion;
+namespace App\Enums;
 
-use App\Domain\Excursion\Exceptions\TransicionDeEstadoInvalida;
+use App\Exceptions\TransicionDeEstadoInvalida;
 
 // Estados de una excursión y las transiciones permitidas entre ellos.
 // Ningún cliente escribe el estado directo: todo cambio pasa por transicionarA().
@@ -36,7 +36,7 @@ enum EstadoExcursion: string
         return in_array($nuevo, $this->siguientesPermitidos(), true);
     }
 
-    // Devuelve el nuevo estado o lanza excepción si la transición no está permitida
+    // Devuelve el nuevo estado o lanza excepción (la API responde 409)
     public function transicionarA(self $nuevo): self
     {
         if (! $this->puedePasarA($nuevo)) {

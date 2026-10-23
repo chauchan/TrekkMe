@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Infrastructure\Persistence\Eloquent\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class AreaModel extends Model
+class Area extends Model
 {
     protected $table = 'areas';
 
@@ -16,11 +16,11 @@ class AreaModel extends Model
 
     public function jurisdiccion(): BelongsTo
     {
-        return $this->belongsTo(JurisdiccionModel::class, 'jurisdiccion_id');
+        return $this->belongsTo(Jurisdiccion::class, 'jurisdiccion_id');
     }
 
     public function senderos(): HasMany
     {
-        return $this->hasMany(SenderoModel::class, 'area_id');
+        return $this->hasMany(Sendero::class, 'area_id');
     }
 }

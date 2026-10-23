@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Infrastructure\Persistence\Eloquent\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SenderoModel extends Model
+class Sendero extends Model
 {
     protected $table = 'senderos';
 
@@ -21,6 +21,6 @@ class SenderoModel extends Model
 
     public function area(): BelongsTo
     {
-        return $this->belongsTo(AreaModel::class, 'area_id');
+        return $this->belongsTo(Area::class, 'area_id');
     }
 }

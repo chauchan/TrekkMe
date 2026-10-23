@@ -2,23 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Application\Territorio\ListarAreas;
-use App\Application\Territorio\ListarSenderosDeArea;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AreaResource;
 use App\Http\Resources\SenderoResource;
+use App\Models\Area;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 // Catálogo de áreas y senderos. Lo consumen Ionic (bitácora) y Flutter (aviso de salida).
 class TerritorioController extends Controller
 {
-    public function areas(ListarAreas $listarAreas): AnonymousResourceCollection
+    public function areas(): AnonymousResourceCollection
     {
-        return AreaResource::collection($listarAreas->ejecutar());
+        $areas = Area::where('activa', true)->orderBy('nombre')->get();
+
+        return AreaResource::collection($areas);
     }
 
-    public function senderos(int $area, ListarSenderosDeArea $listarSenderos): AnonymousResourceCollection
+    // Si el área no existe, el route model binding responde 404
+    public function senderos(Area $area): AnonymousResourceCollection
     {
-        return SenderoResource::collection($listarSenderos->ejecutar($area));
+        $senderos = $area->senderos()->where('activo', true)->orderBy('nombre')->get();
+
+        return SenderoResource::collection($senderos);
     }
 }

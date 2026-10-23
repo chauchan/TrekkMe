@@ -2,37 +2,27 @@
 
 API REST que consumen la app institucional (`../ionic`) y la app del excursionista (`../flutter`).
 
-## Arquitectura
+## Estructura
 
-Clean architecture en cuatro capas. Las dependencias apuntan solo hacia adentro: `Http → Application → Domain ← Infrastructure`.
+Estructura estándar de Laravel:
 
 ```
 app/
-├── Domain/                 Reglas de negocio puras. No usa nada de Laravel.
-│   ├── Shared/Exceptions/  Excepciones base (RecursoNoEncontrado → 404, ConflictoDeDominio → 409)
-│   ├── Excursion/          Máquina de estados de la excursión (EstadoExcursion)
-│   └── Territorio/         Entidades Area y Sendero + interfaz TerritorioRepository
-├── Application/            Casos de uso. Orquestan el dominio a través de las interfaces.
-│   └── Territorio/         ListarAreas, ListarSenderosDeArea
-├── Infrastructure/         Detalles técnicos que implementan las interfaces del dominio.
-│   └── Persistence/Eloquent/
-│       ├── Models/         Modelos Eloquent (sufijo Model para no confundirlos con entidades)
-│       └── Repositories/   EloquentTerritorioRepository
-├── Http/                   Presentación: controladores delgados y Resources JSON.
+├── Enums/                  EstadoExcursion (máquina de estados)
+├── Exceptions/             TransicionDeEstadoInvalida (responde 409)
+├── Http/
+│   ├── Controllers/Api/    Controladores de la API
+│   └── Resources/          Formato JSON de cada respuesta
+├── Models/                 Modelos Eloquent (User, Jurisdiccion, Area, Sendero)
 └── Providers/
-    └── DomainServiceProvider.php   Une cada interfaz con su implementación
+database/
+├── migrations/
+└── seeders/                TerritorioSeeder: mismos senderos que usa Ionic
+routes/api.php              Rutas de la API
+tests/                      Unit (enum de estados) y Feature (endpoints)
 ```
 
-Para agregar un módulo nuevo (por ejemplo, la bitácora):
-
-1. **Domain**: entidad, reglas y la interfaz del repositorio.
-2. **Application**: un caso de uso por acción (`CrearRegistroBitacora`, `EditarRegistroBitacora`, ...).
-3. **Infrastructure**: modelo Eloquent y repositorio que implementa la interfaz.
-4. Registrar el binding en `DomainServiceProvider`.
-5. **Http**: controlador, FormRequest, Resource y ruta en `routes/api.php`.
-6. Tests: unitarios para el dominio, de feature para el endpoint.
-
-`app/Models/User.php` se dejó donde Laravel lo espera porque lo usan la autenticación y Sanctum.
+Para agregar un módulo nuevo (por ejemplo, la bitácora): migración, modelo, controlador en `Http/Controllers/Api`, FormRequest para validar, Resource para la respuesta, ruta en `routes/api.php` y su test de feature.
 
 ## Endpoints disponibles
 

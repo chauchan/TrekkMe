@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Infrastructure\Persistence\Eloquent\Models\JurisdiccionModel;
+use App\Models\Jurisdiccion;
 use Illuminate\Database\Seeder;
 
 // Mismos senderos que la lista fija RUTAS de Ionic (ionic/src/app/models/bitacora.ts),
@@ -12,7 +12,7 @@ class TerritorioSeeder extends Seeder
 {
     public function run(): void
     {
-        $biobio = JurisdiccionModel::create([
+        $biobio = Jurisdiccion::create([
             'nombre' => 'Prefectura Biobío',
             'region' => 'Biobío',
             'comuna' => 'Concepción',

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Infrastructure\Persistence\Eloquent\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class JurisdiccionModel extends Model
+class Jurisdiccion extends Model
 {
     protected $table = 'jurisdicciones';
 
@@ -13,6 +13,6 @@ class JurisdiccionModel extends Model
 
     public function areas(): HasMany
     {
-        return $this->hasMany(AreaModel::class, 'jurisdiccion_id');
+        return $this->hasMany(Area::class, 'jurisdiccion_id');
     }
 }

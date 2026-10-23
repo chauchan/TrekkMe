@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Unit\Domain;
+namespace Tests\Unit;
 
-use App\Domain\Excursion\EstadoExcursion;
-use App\Domain\Excursion\Exceptions\TransicionDeEstadoInvalida;
+use App\Enums\EstadoExcursion;
+use App\Exceptions\TransicionDeEstadoInvalida;
 use PHPUnit\Framework\TestCase;
 
 class EstadoExcursionTest extends TestCase

@@ -2,21 +2,20 @@
 
 namespace App\Http\Resources;
 
-use App\Domain\Territorio\Entities\Area;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin Area */
+/** @mixin \App\Models\Area */
 class AreaResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'jurisdiccion_id' => $this->jurisdiccionId,
+            'jurisdiccion_id' => $this->jurisdiccion_id,
             'nombre' => $this->nombre,
             'tipo' => $this->tipo,
-            'cobertura_celular' => $this->coberturaCelular,
+            'cobertura_celular' => $this->cobertura_celular,
         ];
     }
 }
