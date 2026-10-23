@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('excursions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->int('estado_id')->constrained('estado')->cascadeOnDelete();
-            $table->int('duracion_horas'); //estimada
+            $table->foreignId('estado_id')->constrained('estado')->cascadeOnDelete();
+            $table->integer('duracion_horas'); //estimada
             $table->timestamp('salida');
             
         });
