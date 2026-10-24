@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete();
             $table->foreignId('excursion_id')->constrained('excursions')->cascadeOnDelete();
-            $table->date('hora_inicio');
-            $table->date('hora_fin')->nullable();
+            $table->dateTime('hora_inicio');
+            $table->dateTime('hora_fin')->nullable();
             
         });
     }
