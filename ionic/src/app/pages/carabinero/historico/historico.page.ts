@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   IonButton,
   IonButtons,
@@ -49,6 +50,9 @@ export class HistoricoPage {
   cargando = signal(true);
   error = signal('');
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   constructor(private servicio: HistoricoService) { }
 
   // Ionic lo llama cada vez que se entra a la página
@@ -56,12 +60,18 @@ export class HistoricoPage {
     this.cargar();
   }
 
-  // Pide los avisos cerrados y actualiza los signals
+  // Ionic lo llama al salir de la página: deja de escuchar Firestore
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha los avisos cerrados: la lista se actualiza sola
   cargar() {
+    this.suscripcion?.unsubscribe();   // por si se llama desde "Reintentar"
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listar().subscribe({
+    this.suscripcion = this.servicio.listar().subscribe({
       next: (avisos) => {
         this.avisos.set(avisos);
         this.cargando.set(false);

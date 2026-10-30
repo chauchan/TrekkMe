@@ -1,28 +1,38 @@
-import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
-import { buscarPorRescatista, cambiarEstadoSi } from '../../../core/excursiones-firestore';
-import { ESTADO_CIERRE_PENDIENTE, ESTADO_EN_OPERATIVO, Excursion } from '../../../models/excursion';
-import { RESCATISTA_ACTUAL } from '../../../models/rescatista';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, firstValueFrom } from 'rxjs';
+import { collection, query, where } from 'firebase/firestore';
+import { url } from '../../../core/api';
+import { aExcursion } from '../../../core/conversores';
+import { traducirError } from '../../../core/errores';
+import { COLECCION_EXCURSIONES, db } from '../../../core/firebase';
+import { obtenerUsuarioId } from '../../../core/sesion';
+import { escuchar } from '../../../core/tiempo-real';
+import { Excursion } from '../../../models/excursion';
 
 // Servicio de casos asignados (actor: rescatista). Lo provee solo CasosPage.
 @Injectable()
 export class CasosService {
+  private http = inject(HttpClient);
 
-  // Casos del rescatista que entró: en operativo o esperando que Carabineros confirme el cierre.
-  // Como todavía no hay login, el rescatista es siempre RESCATISTA_ACTUAL.
+  // Casos del rescatista que entró, en vivo: en operativo o esperando que Carabineros confirme el cierre
   listar(): Observable<Excursion[]> {
-    return from(this.buscarAbiertos());
-  }
-
-  private async buscarAbiertos(): Promise<Excursion[]> {
-    const excursiones = await buscarPorRescatista(RESCATISTA_ACTUAL);
-    return excursiones.filter(
-      (caso) => caso.estado === ESTADO_EN_OPERATIVO || caso.estado === ESTADO_CIERRE_PENDIENTE
+    const consulta = query(
+      collection(db, COLECCION_EXCURSIONES),
+      where('rescatistaId', '==', obtenerUsuarioId()),          // las reglas exigen este filtro
+      where('estado', 'in', ['en_operativo', 'cierre_pendiente'])
     );
+    return escuchar(consulta, aExcursion);
   }
 
   // En operativo → cierre pendiente (falta la confirmación de Carabineros)
-  solicitarCierre(id: string): Promise<void> {
-    return cambiarEstadoSi(id, ESTADO_EN_OPERATIVO, { estado: ESTADO_CIERRE_PENDIENTE });
+  async solicitarCierre(id: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post(url(`/rescatista/casos/${id}/solicitar-cierre`), { estado_esperado: 'en_operativo' })
+      );
+    } catch (error) {
+      throw traducirError(error);
+    }
   }
 }

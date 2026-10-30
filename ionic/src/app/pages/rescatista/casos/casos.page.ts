@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   AlertController,
   IonBadge,
@@ -55,6 +56,9 @@ export class CasosPage {
   cargando = signal(true);
   error = signal('');
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   constructor(
     private servicio: CasosService,
     private alertas: AlertController,
@@ -66,12 +70,18 @@ export class CasosPage {
     this.cargar();
   }
 
-  // Pide los casos del rescatista actual y actualiza los signals
+  // Ionic lo llama al salir de la página: deja de escuchar Firestore
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha los casos del rescatista: la lista se actualiza sola cada vez que alguno cambia
   cargar() {
+    this.suscripcion?.unsubscribe();   // por si se llama desde "Reintentar"
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listar().subscribe({
+    this.suscripcion = this.servicio.listar().subscribe({
       next: (casos) => {
         this.casos.set(casos);
         this.cargando.set(false);
@@ -101,7 +111,7 @@ export class CasosPage {
     await alerta.present();
   }
 
-  // Deja el caso en "Cierre pendiente", avisa con un toast y recarga la lista
+  // Deja el caso en "Cierre pendiente" y avisa con un toast (la lista se actualiza sola)
   async pedirCierre(caso: Excursion) {
     try {
       await this.servicio.solicitarCierre(caso.id);
@@ -119,6 +129,5 @@ export class CasosPage {
       });
       await toast.present();
     }
-    this.cargar();
   }
 }

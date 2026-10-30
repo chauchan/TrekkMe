@@ -19,6 +19,7 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
+import { FUERA_DE_SENDERO, Sendero } from '../../../models/bitacora';
 import { BitacoraFormService } from './bitacora-form.service';
 
 @Component({
@@ -54,8 +55,11 @@ export class BitacoraFormPage implements OnInit {
   // ID del registro que se edita. Si es null, estamos creando uno nuevo
   id: string | null = null;
 
-  // Opciones del selector "Ruta"
-  rutas: string[] = [];
+  // Opciones del selector "Ruta" (llegan desde la API)
+  rutas = signal<Sendero[]>([]);
+
+  // Valor de la opción "Fuera de sendero", para el template
+  fueraDeSendero = FUERA_DE_SENDERO;
 
   // Campos del formulario.
   // Las horas se guardan como texto "2026-10-08T14:30", que es el formato del campo de fecha y hora
@@ -79,17 +83,22 @@ export class BitacoraFormPage implements OnInit {
     private toasts: ToastController
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     // Lee el :casoId y el :id de la URL. En .../bitacora/nuevo no hay id, así que queda null
     this.casoId = this.rutaActual.snapshot.paramMap.get('casoId')!;
     this.id = this.rutaActual.snapshot.paramMap.get('id');
-    this.rutas = this.servicio.listarRutas();
 
     if (this.id !== null) {
       this.cargar(this.id);
     } else {
       // Registro nuevo: la hora de inicio parte en la hora actual
       this.horaInicio.set(this.aTexto(new Date()));
+    }
+
+    try {
+      this.rutas.set(await this.servicio.listarRutas());
+    } catch (error: any) {
+      await this.avisarError(error.message);
     }
   }
 
@@ -101,7 +110,7 @@ export class BitacoraFormPage implements OnInit {
       if (registro === null) {
         this.error.set('El registro no existe.');
       } else {
-        this.ruta.set(registro.ruta);
+        this.ruta.set(registro.senderoId ?? FUERA_DE_SENDERO);
         this.horaInicio.set(this.aTexto(registro.horaInicio));
         if (registro.horaFin !== null) {
           this.horaFin.set(this.aTexto(registro.horaFin));

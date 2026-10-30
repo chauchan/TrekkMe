@@ -64,8 +64,8 @@ export class AvisoPage implements OnInit {
   estadoEnAlerta = ESTADO_EN_ALERTA;
   estadoCierrePendiente = ESTADO_CIERRE_PENDIENTE;
 
-  // Opciones del selector de rescatista
-  rescatistas: Rescatista[] = [];
+  // Opciones del selector de rescatista (llegan desde la API)
+  rescatistas = signal<Rescatista[]>([]);
 
   // Rescatista elegido para asignarle el caso al escalar
   rescatistaElegido = signal('');
@@ -83,11 +83,15 @@ export class AvisoPage implements OnInit {
     private toasts: ToastController
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     // Lee el :id de la URL /carabinero/aviso/:id
     this.id = this.rutaActual.snapshot.paramMap.get('id')!;
-    this.rescatistas = this.servicio.listarRescatistas();
     this.cargar();
+    try {
+      this.rescatistas.set(await this.servicio.listarRescatistas());
+    } catch (error: any) {
+      await this.avisar(error.message, 'danger');
+    }
   }
 
   // Trae el aviso desde el servicio
@@ -112,7 +116,7 @@ export class AvisoPage implements OnInit {
 
   // Busca el nombre de un rescatista en la lista que entrega el servicio
   nombreRescatista(id: string): string {
-    for (const rescatista of this.rescatistas) {
+    for (const rescatista of this.rescatistas()) {
       if (rescatista.id === id) {
         return rescatista.nombre;
       }

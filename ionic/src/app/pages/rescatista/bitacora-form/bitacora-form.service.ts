@@ -1,22 +1,29 @@
-import { Injectable } from '@angular/core';
-import { Timestamp, addDoc, collection, doc, getDoc, runTransaction } from 'firebase/firestore';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { doc, getDoc } from 'firebase/firestore';
+import { url } from '../../../core/api';
 import { aBitacora } from '../../../core/conversores';
 import { traducirError } from '../../../core/errores';
-import { aTimestamp } from '../../../core/fechas';
 import { COLECCION_BITACORA, db } from '../../../core/firebase';
-import { Bitacora, RUTAS } from '../../../models/bitacora';
-import { RESCATISTA_ACTUAL } from '../../../models/rescatista';
+import { Bitacora, FUERA_DE_SENDERO, Sendero } from '../../../models/bitacora';
 
 // Servicio del formulario de la bitácora (actor: rescatista). Lo provee solo BitacoraFormPage.
 @Injectable()
 export class BitacoraFormService {
+  private http = inject(HttpClient);
 
-  // Senderos para el selector "Ruta". Más adelante vendrán del backend (catálogo de senderos)
-  listarRutas(): string[] {
-    return RUTAS;
+  // Senderos para el selector "Ruta" (catálogo: no necesita tiempo real)
+  async listarRutas(): Promise<Sendero[]> {
+    try {
+      const respuesta = await firstValueFrom(this.http.get<{ data: any[] }>(url('/senderos')));
+      return respuesta.data.map((s) => ({ id: String(s.id), nombre: s.nombre }));
+    } catch (error) {
+      throw traducirError(error);
+    }
   }
 
-  // Un registro por su ID, o null si no existe
+  // Un registro por su ID, o null si no existe (lectura única de Firestore)
   async obtener(id: string): Promise<Bitacora | null> {
     try {
       const documento = await getDoc(doc(db, COLECCION_BITACORA, id));
@@ -29,60 +36,46 @@ export class BitacoraFormService {
     }
   }
 
-  // Crea un registro nuevo dentro de un caso, con la fecha actual y version 1
-  async crear(casoId: string, ruta: string, horaInicio: Date, horaFin: Date | null, texto: string): Promise<void> {
+  // Crea un registro nuevo dentro de un caso. El servidor pone el rescatista, la fecha y la versión 1
+  async crear(casoId: string, senderoId: string, horaInicio: Date, horaFin: Date | null, texto: string): Promise<void> {
     try {
-      await addDoc(collection(db, COLECCION_BITACORA), {
-        excursionId: casoId,
-        rescatistaId: RESCATISTA_ACTUAL,
-        ruta: ruta,
-        horaInicio: Timestamp.fromDate(horaInicio),
-        horaFin: aTimestamp(horaFin),
-        texto: texto,
-        registradoAt: Timestamp.now(),
-        version: 1,
-      });
+      await firstValueFrom(
+        this.http.post(url(`/rescatista/casos/${casoId}/bitacora`), this.cuerpo(senderoId, horaInicio, horaFin, texto))
+      );
     } catch (error) {
       throw traducirError(error);
     }
   }
 
-  // Edita el registro SOLO si nadie más lo cambió desde que lo leímos.
-  // La transacción lee y escribe "de una sola vez", así dos personas no se pisan.
+  // Edita el registro. Se manda la versión que se leyó: si alguien lo cambió antes,
+  // el servidor responde 409 ("Alguien modificó este registro...") y no se pisa nada.
   async editar(
     id: string,
-    ruta: string,
+    senderoId: string,
     horaInicio: Date,
     horaFin: Date | null,
     texto: string,
     versionLeida: number
   ): Promise<void> {
     try {
-      const referencia = doc(db, COLECCION_BITACORA, id);
-
-      await runTransaction(db, async (transaccion) => {
-        const documento = await transaccion.get(referencia);
-
-        if (!documento.exists()) {
-          throw new Error('El registro ya no existe.');
-        }
-
-        // Condición: la versión guardada debe ser la misma que leímos
-        const versionActual = documento.data()['version'];
-        if (versionActual !== versionLeida) {
-          throw new Error('Alguien modificó este registro. Vuelve a abrirlo e intenta de nuevo.');
-        }
-
-        transaccion.update(referencia, {
-          ruta: ruta,
-          horaInicio: Timestamp.fromDate(horaInicio),
-          horaFin: aTimestamp(horaFin),
-          texto: texto,
-          version: versionActual + 1,
-        });
-      });
+      await firstValueFrom(
+        this.http.put(url(`/rescatista/bitacora/${id}`), {
+          ...this.cuerpo(senderoId, horaInicio, horaFin, texto),
+          version: versionLeida,
+        })
+      );
     } catch (error) {
       throw traducirError(error);
     }
+  }
+
+  // Arma los datos que espera la API (snake_case y fechas en texto ISO)
+  private cuerpo(senderoId: string, horaInicio: Date, horaFin: Date | null, texto: string) {
+    return {
+      sendero_id: senderoId === FUERA_DE_SENDERO ? null : senderoId,
+      hora_inicio: horaInicio.toISOString(),
+      hora_fin: horaFin === null ? null : horaFin.toISOString(),
+      texto: texto,
+    };
   }
 }

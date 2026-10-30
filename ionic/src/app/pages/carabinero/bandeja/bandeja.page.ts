@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   IonBadge,
   IonButton,
@@ -53,6 +54,9 @@ export class BandejaPage {
   cargando = signal(true);
   error = signal('');
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   constructor(
     private servicio: BandejaService,
     private toasts: ToastController
@@ -63,13 +67,18 @@ export class BandejaPage {
     this.cargar();
   }
 
-  // Pide los avisos activos (todos menos los cerrados) y actualiza los signals
+  // Ionic lo llama al salir de la página: deja de escuchar Firestore
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha los avisos activos: la lista se actualiza sola cada vez que alguno cambia
   cargar() {
+    this.suscripcion?.unsubscribe();   // por si se llama desde "Reintentar"
     this.cargando.set(true);
     this.error.set('');
 
-
-    this.servicio.listar().subscribe({
+    this.suscripcion = this.servicio.listar().subscribe({
       next: (avisos) => {
         this.avisos.set(avisos);
         this.cargando.set(false);

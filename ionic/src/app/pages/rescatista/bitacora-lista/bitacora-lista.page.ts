@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   AlertController,
   IonBackButton,
@@ -55,6 +56,9 @@ export class BitacoraListaPage implements OnInit {
   cargando = signal(true);
   error = signal('');
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   constructor(
     private servicio: BitacoraListaService,
     private rutaActual: ActivatedRoute,
@@ -72,12 +76,18 @@ export class BitacoraListaPage implements OnInit {
     this.cargar();
   }
 
-  // Pide los registros del caso al servicio y actualiza los signals
+  // Ionic lo llama al salir de la página: deja de escuchar Firestore
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha los registros del caso: la lista se actualiza sola cada vez que alguno cambia
   cargar() {
+    this.suscripcion?.unsubscribe();   // por si se llama desde "Reintentar"
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listar(this.casoId).subscribe({
+    this.suscripcion = this.servicio.listar(this.casoId).subscribe({
       next: (registros) => {
         this.registros.set(registros);
         this.cargando.set(false);
@@ -108,7 +118,7 @@ export class BitacoraListaPage implements OnInit {
     await alerta.present();
   }
 
-  // Borra el registro, avisa con un toast y recarga la lista
+  // Borra el registro y avisa con un toast (la lista se actualiza sola)
   async eliminar(registro: Bitacora) {
     try {
       await this.servicio.eliminar(registro.id!);
@@ -126,6 +136,5 @@ export class BitacoraListaPage implements OnInit {
       });
       await toast.present();
     }
-    this.cargar();
   }
 }

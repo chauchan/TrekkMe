@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   IonBackButton,
   IonButton,
@@ -73,31 +74,52 @@ export class TerrenoPage implements OnInit {
     private sanitizador: DomSanitizer
   ) { }
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   ngOnInit() {
     // Lee el :id de la URL /rescatista/casos/:id/terreno
     this.id = this.rutaActual.snapshot.paramMap.get('id')!;
-    this.cargar();
     this.buscarMiPosicion();
   }
 
-  // Trae el caso desde el servicio. También sirve para revisar si llegó una ubicación nueva
-  async cargar() {
+  ionViewWillEnter() {
+    this.cargar();
+  }
+
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha el caso: cuando llega una ubicación nueva del excursionista, el mapa se mueve solo
+  cargar() {
+    this.suscripcion?.unsubscribe();
     this.cargando.set(true);
     this.error.set('');
-    try {
-      const caso = await this.servicio.obtener(this.id);
-      if (caso === null) {
-        this.error.set('El caso no existe.');
-      } else {
-        this.caso.set(caso);
-        if (caso.ultimaLat !== null && caso.ultimaLng !== null) {
-          this.mapa.set(this.armarMapa(caso.ultimaLat, caso.ultimaLng));
+
+    this.suscripcion = this.servicio.obtener(this.id).subscribe({
+      next: (caso) => {
+        if (caso === null) {
+          this.error.set('El caso no existe.');
+        } else {
+          const anterior = this.caso();
+          this.error.set('');
+          this.caso.set(caso);
+
+          // Rearma el mapa solo si la ubicación cambió
+          const cambioUbicacion =
+            anterior === null || anterior.ultimaLat !== caso.ultimaLat || anterior.ultimaLng !== caso.ultimaLng;
+          if (cambioUbicacion && caso.ultimaLat !== null && caso.ultimaLng !== null) {
+            this.mapa.set(this.armarMapa(caso.ultimaLat, caso.ultimaLng));
+          }
         }
-      }
-    } catch (error: any) {
-      this.error.set(error.message);
-    }
-    this.cargando.set(false);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        this.error.set(error.message);
+        this.cargando.set(false);
+      },
+    });
   }
 
   // Arma la dirección de un mapa de OpenStreetMap centrado en un punto, con un marcador

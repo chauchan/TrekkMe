@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
-import { obtenerPorId } from '../../../core/excursiones-firestore';
+import { Observable } from 'rxjs';
+import { doc } from 'firebase/firestore';
+import { aExcursion } from '../../../core/conversores';
+import { COLECCION_EXCURSIONES, db } from '../../../core/firebase';
+import { escucharUno } from '../../../core/tiempo-real';
 import { Excursion } from '../../../models/excursion';
 
 // Un punto en el mapa
@@ -12,9 +16,9 @@ export interface Posicion {
 @Injectable()
 export class TerrenoService {
 
-  // El caso, o null si no existe. También sirve para revisar si llegó una ubicación nueva
-  obtener(id: string): Promise<Excursion | null> {
-    return obtenerPorId(id);
+  // El caso, en vivo: la última ubicación y la batería se actualizan sin recargar
+  obtener(id: string): Observable<Excursion | null> {
+    return escucharUno(doc(db, COLECCION_EXCURSIONES, id), aExcursion);
   }
 
   // Pide al teléfono (o al navegador) la posición actual del rescatista.
