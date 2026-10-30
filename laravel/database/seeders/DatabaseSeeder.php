@@ -9,8 +9,13 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
+    // Se puede correr varias veces: actualiza por ID en vez de duplicar
     public function run(): void
     {
-        $this->call(EstadoSeeder::class);
+        $this->call([
+            UsuarioSeeder::class,
+            ExcursionSeeder::class,
+            BitacoraSeeder::class,
+        ]);
     }
 }

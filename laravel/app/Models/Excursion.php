@@ -2,33 +2,43 @@
 
 namespace App\Models;
 
+use App\Enums\EstadoExcursion;
+use App\Models\Concerns\GeneraIdConPrefijo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Excursion extends Model
 {
+    use GeneraIdConPrefijo;
+
     protected $table = 'excursions';
 
     public $timestamps = false;
 
-    protected $fillable = ['usuario_id', 'estado_id', 'duracion_horas', 'salida'];
+    protected $guarded = [];
 
     protected function casts(): array
     {
         return [
-            'salida' => 'datetime',
+            'estado' => EstadoExcursion::class,
+            'acompanantes' => 'array',
+            'salida_at' => 'datetime',
+            'retorno_at' => 'datetime',
+            'ultima_ubicacion_at' => 'datetime',
+            'lleva_carpa' => 'boolean',
+            'lleva_linterna' => 'boolean',
         ];
     }
 
-    public function usuario(): BelongsTo
+    protected function prefijoId(): string
     {
-        return $this->belongsTo(Usuario::class);
+        return 'exc';
     }
 
-    public function estado(): BelongsTo
+    public function rescatista(): BelongsTo
     {
-        return $this->belongsTo(Estado::class);
+        return $this->belongsTo(Usuario::class, 'rescatista_id');
     }
 
     public function bitacoras(): HasMany
