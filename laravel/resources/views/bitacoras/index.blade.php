@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('titulo', 'Bitácoras')
 @section('contenido')
-    <div class="barra">
-        <h1>Bitácoras ({{ count($bitacoras) }})</h1>
-        <a class="btn" href="/bitacoras/crear">+ Nuevo registro</a>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Bitácoras ({{ count($bitacoras) }})</h1>
+        <a class="btn btn-primary" href="/bitacoras/crear">+ Nuevo registro</a>
     </div>
 
-    <table>
+    <div class="overflow-x-auto bg-base-100 rounded-box shadow"><table class="table table-zebra">
         <thead>
             <tr><th>ID</th><th>Excursión</th><th>Rescatista</th><th>Ruta</th><th>Inicio</th><th>Fin</th><th>Texto</th><th>Versión</th></tr>
         </thead>
@@ -23,8 +23,8 @@
                     <td>{{ $b['version'] }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="vacio">No hay registros.</td></tr>
+                <tr><td colspan="8" class="text-center opacity-60">No hay registros.</td></tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 @endsection
