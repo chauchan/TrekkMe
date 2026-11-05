@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('titulo', 'Usuarios')
 @section('contenido')
-    <div class="barra">
-        <h1>Usuarios registrados ({{ count($usuarios) }})</h1>
-        <a class="btn" href="/usuarios/crear">+ Nuevo usuario</a>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Usuarios registrados ({{ count($usuarios) }})</h1>
+        <a class="btn btn-primary" href="/usuarios/crear">+ Nuevo usuario</a>
     </div>
 
-    <table>
+    <div class="overflow-x-auto bg-base-100 rounded-box shadow"><table class="table table-zebra">
         <thead>
             <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Jurisdicción</th><th>Casos asignados</th><th>Bitácoras</th><th>Actualizado</th></tr>
         </thead>
@@ -23,8 +23,8 @@
                     <td>{{ $usuario['_actualizado'] ? \Illuminate\Support\Carbon::parse($usuario['_actualizado'])->format('d/m/Y H:i') : '' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="vacio">No hay usuarios registrados.</td></tr>
+                <tr><td colspan="8" class="text-center opacity-60">No hay usuarios registrados.</td></tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 @endsection
