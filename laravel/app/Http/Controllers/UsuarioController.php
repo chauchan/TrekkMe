@@ -29,7 +29,7 @@ class UsuarioController extends Controller
     public function create(CatalogoRepository $catalogo)
     {
         return view('usuarios.crear', [
-            'roles' => RolUsuario::cases(),
+            'roles' => RolUsuario::asignables(),
             'jurisdicciones' => $catalogo->jurisdicciones(),
         ]);
     }
@@ -39,7 +39,7 @@ class UsuarioController extends Controller
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'rol' => ['required', Rule::enum(RolUsuario::class)],
+            'rol' => ['required', Rule::in(array_column(RolUsuario::asignables(), 'value'))],
             'jurisdiccion_id' => ['nullable', Rule::in(collect($catalogo->jurisdicciones())->pluck('id')->all())],
             'password' => ['required', 'string', 'min:8'],
         ]);

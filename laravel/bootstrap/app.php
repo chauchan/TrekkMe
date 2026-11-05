@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'firebase' => \App\Http\Middleware\AutenticarConFirebase::class,
             'rol' => \App\Http\Middleware\ExigirRol::class,
+            'admin' => \App\Http\Middleware\ExigirAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

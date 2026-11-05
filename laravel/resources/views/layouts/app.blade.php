@@ -26,11 +26,19 @@
     </style>
 </head>
 <body>
+    @if (session('admin'))
     <nav>
         <a href="/usuarios">Usuarios</a>
         <a href="/excursiones">Excursiones</a>
         <a href="/bitacoras">Bitácoras</a>
+        @if (session('admin'))
+            <form method="POST" action="/logout" style="margin-left:auto">
+                @csrf
+                <button class="btn" style="background:transparent;border:1px solid #fff">Salir ({{ session('admin.nombre') }})</button>
+            </form>
+        @endif
     </nav>
+    @endif
     <main>
         @if (session('ok'))
             <div class="ok">{{ session('ok') }}</div>
