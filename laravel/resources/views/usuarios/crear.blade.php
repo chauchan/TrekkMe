@@ -13,6 +13,14 @@
                 @endforeach
             </select>
         </label>
+        <label>Jurisdicción (carabineros y rescatistas)
+            <select name="jurisdiccion_id">
+                <option value="">— ninguna —</option>
+                @foreach ($jurisdicciones as $j)
+                    <option value="{{ $j['id'] }}" @selected(old('jurisdiccion_id') === $j['id'])>{{ $j['nombre'] }}</option>
+                @endforeach
+            </select>
+        </label>
         <label>Contraseña <input type="password" name="password" required minlength="8"></label>
         <div><button class="btn" type="submit">Guardar</button> <a href="/usuarios">Cancelar</a></div>
     </form>

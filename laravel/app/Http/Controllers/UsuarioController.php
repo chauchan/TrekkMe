@@ -3,40 +3,58 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RolUsuario;
-use App\Models\Usuario;
-use App\Services\FirestoreSync;
+use App\Services\Firestore\BitacoraRepository;
+use App\Services\Firestore\CatalogoRepository;
+use App\Services\Firestore\ExcursionRepository;
+use App\Services\Firestore\UsuarioRepository;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class UsuarioController extends Controller
 {
-    public function index()
+    public function index(UsuarioRepository $usuarios, ExcursionRepository $excursiones, BitacoraRepository $bitacoras, CatalogoRepository $catalogo)
     {
-        $usuarios = Usuario::withCount(['excursiones', 'bitacoras'])
-            ->orderBy('nombre')
-            ->get();
+        $casos = collect($excursiones->todas())->countBy('rescatistaId');
+        $registros = collect($bitacoras->todas())->countBy('rescatistaId');
+        $jurisdicciones = collect($catalogo->jurisdicciones())->pluck('nombre', 'id');
 
-        return view('usuarios.index', compact('usuarios'));
+        return view('usuarios.index', [
+            'usuarios' => $usuarios->todos(),
+            'casos' => $casos,
+            'registros' => $registros,
+            'jurisdicciones' => $jurisdicciones,
+        ]);
     }
 
-    public function create()
+    public function create(CatalogoRepository $catalogo)
     {
-        return view('usuarios.crear', ['roles' => RolUsuario::cases()]);
+        return view('usuarios.crear', [
+            'roles' => RolUsuario::cases(),
+            'jurisdicciones' => $catalogo->jurisdicciones(),
+        ]);
     }
 
-    public function store(Request $request, FirestoreSync $firestore)
+    public function store(Request $request, UsuarioRepository $usuarios, CatalogoRepository $catalogo)
     {
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:usuarios,email'],
+            'email' => ['required', 'email', 'max:255'],
             'rol' => ['required', Rule::enum(RolUsuario::class)],
+            'jurisdiccion_id' => ['nullable', Rule::in(collect($catalogo->jurisdicciones())->pluck('id')->all())],
             'password' => ['required', 'string', 'min:8'],
         ]);
 
-        $usuario = Usuario::create($datos);
+        $rol = RolUsuario::from($datos['rol']);
 
-        [$aviso] = $this->sincronizar(fn () => $firestore->usuario($usuario));
+        if ($rol !== RolUsuario::Excursionista && empty($datos['jurisdiccion_id'])) {
+            return back()->withInput()->withErrors(['jurisdiccion_id' => 'Los carabineros y rescatistas necesitan una jurisdicción.']);
+        }
+        if ($usuarios->porEmail($datos['email'])) {
+            return back()->withInput()->withErrors(['email' => 'Ya existe un usuario con ese correo.']);
+        }
 
-        return redirect('/usuarios')->with('ok', "Usuario {$usuario->id} creado.".$aviso);
+        $id = $usuarios->crear($datos['nombre'], $datos['email'], $rol, $datos['jurisdiccion_id'] ?? null, $datos['password']);
+
+        return redirect('/usuarios')->with('ok', "Usuario {$id} creado en Firestore.");
     }
 }

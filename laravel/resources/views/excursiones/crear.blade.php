@@ -28,7 +28,13 @@
 
         <fieldset>
             <legend>Excursión</legend>
-            <label>Ruta <input name="ruta" value="{{ old('ruta') }}" required></label>
+            <label>Sendero
+                <select name="sendero_id" required>
+                    @foreach ($senderos as $s)
+                        <option value="{{ $s['id'] }}" @selected(old('sendero_id') === $s['id'])>{{ $s['nombre'] }}</option>
+                    @endforeach
+                </select>
+            </label>
             <label>Salida <input type="datetime-local" name="salida_at" value="{{ old('salida_at') }}" required></label>
             <label>Retorno <input type="datetime-local" name="retorno_at" value="{{ old('retorno_at') }}" required></label>
             <label>Estado
@@ -42,7 +48,7 @@
                 <select name="rescatista_id">
                     <option value="">— ninguno —</option>
                     @foreach ($rescatistas as $r)
-                        <option value="{{ $r->id }}" @selected(old('rescatista_id') === $r->id)>{{ $r->nombre }} ({{ $r->id }})</option>
+                        <option value="{{ $r['id'] }}" @selected(old('rescatista_id') === $r['id'])>{{ $r['nombre'] }} ({{ $r['id'] }})</option>
                     @endforeach
                 </select>
             </label>

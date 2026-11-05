@@ -16,4 +16,10 @@ enum EstadoExcursion: string
     {
         return ucfirst(str_replace('_', ' ', $this->value));
     }
+
+    // Acepta el código ("en_operativo") y el texto antiguo de Ionic ("En operativo")
+    public static function desdeTexto(string $texto): ?self
+    {
+        return self::tryFrom(str_replace(' ', '_', strtolower(trim($texto))));
+    }
 }
