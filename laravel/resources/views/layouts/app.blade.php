@@ -24,7 +24,18 @@
     @endif
     <main class="p-6 max-w-7xl mx-auto">
         @if (session('ok'))
-            <div class="alert alert-success mb-4"><span>{{ session('ok') }}</span></div>
+            <div id="aviso-ok" role="status" class="mb-4 flex items-center justify-between gap-4 rounded-box border border-emerald-300 bg-emerald-50 px-4 py-3 font-medium text-emerald-900 shadow-sm transition-opacity duration-500">
+                <span>{{ session('ok') }}</span>
+                <button type="button" aria-label="Cerrar" class="rounded-md px-2 text-xl leading-none text-emerald-800 hover:bg-emerald-100" onclick="document.getElementById('aviso-ok').remove()">&times;</button>
+            </div>
+            <script>
+                setTimeout(() => {
+                    const aviso = document.getElementById('aviso-ok');
+                    if (!aviso) return;
+                    aviso.classList.add('opacity-0');
+                    setTimeout(() => aviso.remove(), 500);
+                }, 4000);
+            </script>
         @endif
         @if ($errors->any())
             <div class="alert alert-error mb-4">
