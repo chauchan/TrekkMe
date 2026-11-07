@@ -53,3 +53,15 @@ export const ESTADO_EN_ALERTA = 'En alerta';        // no confirmó el retorno a
 export const ESTADO_EN_OPERATIVO = 'En operativo';  // el carabinero la escaló a búsqueda
 export const ESTADO_CIERRE_PENDIENTE = 'Cierre pendiente';  // el rescatista pidió cerrar; falta Carabineros
 export const ESTADO_CERRADA = 'Cerrada';
+
+// Lo que ve el carabinero de un acompañante: solo quién es, sin datos médicos
+export interface AcompananteAviso {
+  nombre: string;
+  rut: string;
+}
+
+// Lo que ve el carabinero de una excursión: todo menos los datos médicos,
+// que solo aparecen en la ficha de búsqueda del rescatista asignado
+export interface Aviso extends Omit<Excursion, 'condicionesMedicas' | 'acompanantes'> {
+  acompanantes: AcompananteAviso[];
+}

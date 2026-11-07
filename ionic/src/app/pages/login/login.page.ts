@@ -1,17 +1,70 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import {
+  IonButton,
+  IonContent,
+  IonHeader,
+  IonInput,
+  IonItem,
+  IonList,
+  IonSpinner,
+  IonText,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular';
+import { LoginService } from './login.service';
 
-// Por ahora no hay usuario ni contraseña: se elige el perfil con un botón.
-// Cuando exista el login real, el perfil lo dirá el servidor.
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [LoginService],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IonButton, IonContent, IonHeader, IonTitle, IonToolbar],
+  imports: [
+    FormsModule,
+    IonButton,
+    IonContent,
+    IonHeader,
+    IonInput,
+    IonItem,
+    IonList,
+    IonSpinner,
+    IonText,
+    IonTitle,
+    IonToolbar,
+  ],
 })
 export class LoginPage {
 
-  constructor() { }
+  // Campos del formulario
+  correo = signal('');
+  clave = signal('');
 
+  // Estado de la pantalla
+  entrando = signal(false);
+  error = signal('');
+
+  constructor(
+    private servicio: LoginService,
+    private router: Router
+  ) { }
+
+  // Inicia sesión y lleva a la primera pantalla del perfil
+  async entrar() {
+    this.entrando.set(true);
+    this.error.set('');
+    try {
+      const perfil = await this.servicio.iniciarSesion(this.correo().trim(), this.clave());
+      this.clave.set('');
+      if (perfil === 'carabinero') {
+        this.router.navigateByUrl('/carabinero/bandeja');
+      } else {
+        this.router.navigateByUrl('/rescatista/casos');
+      }
+    } catch (error: any) {
+      this.error.set(error.message);
+    }
+    this.entrando.set(false);
+  }
 }

@@ -96,7 +96,7 @@
           placeholder="Elige un rescatista"
           [(ngModel)]="rescatistaElegido"
         >
-          @for (rescatista of rescatistas; track rescatista.id) {
+          @for (rescatista of rescatistas(); track rescatista.id) {
             <ion-select-option [value]="rescatista.id">{{ rescatista.nombre }}</ion-select-option>
           }
         </ion-select>
