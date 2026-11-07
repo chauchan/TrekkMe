@@ -1,82 +1,58 @@
-# TrekkMe — Backend Laravel
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-API REST que consumen la app institucional (`../ionic`) y la app del excursionista (`../flutter`).
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## Arquitectura
+## About Laravel
 
-Clean architecture en cuatro capas. Las dependencias apuntan solo hacia adentro: `Http → Application → Domain ← Infrastructure`.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-```
-app/
-├── Domain/                 Reglas de negocio puras. No usa nada de Laravel.
-│   ├── Shared/Exceptions/  Excepciones base (RecursoNoEncontrado → 404, ConflictoDeDominio → 409)
-│   ├── Excursion/          Máquina de estados de la excursión (EstadoExcursion)
-│   └── Territorio/         Entidades Area y Sendero + interfaz TerritorioRepository
-├── Application/            Casos de uso. Orquestan el dominio a través de las interfaces.
-│   └── Territorio/         ListarAreas, ListarSenderosDeArea
-├── Infrastructure/         Detalles técnicos que implementan las interfaces del dominio.
-│   └── Persistence/Eloquent/
-│       ├── Models/         Modelos Eloquent (sufijo Model para no confundirlos con entidades)
-│       └── Repositories/   EloquentTerritorioRepository
-├── Http/                   Presentación: controladores delgados y Resources JSON.
-└── Providers/
-    └── DomainServiceProvider.php   Une cada interfaz con su implementación
-```
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Para agregar un módulo nuevo (por ejemplo, la bitácora):
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-1. **Domain**: entidad, reglas y la interfaz del repositorio.
-2. **Application**: un caso de uso por acción (`CrearRegistroBitacora`, `EditarRegistroBitacora`, ...).
-3. **Infrastructure**: modelo Eloquent y repositorio que implementa la interfaz.
-4. Registrar el binding en `DomainServiceProvider`.
-5. **Http**: controlador, FormRequest, Resource y ruta en `routes/api.php`.
-6. Tests: unitarios para el dominio, de feature para el endpoint.
+## Learning Laravel
 
-`app/Models/User.php` se dejó donde Laravel lo espera porque lo usan la autenticación y Sanctum.
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## Endpoints disponibles
+In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/api/areas` | Áreas activas del catálogo |
-| `GET` | `/api/areas/{id}/senderos` | Senderos activos de un área (404 si no existe) |
+You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
 
-## Máquina de estados
+## Agentic Development
 
-| Desde | Hacia | Motivo |
-|---|---|---|
-| `programada` | `en_curso`, `cancelada` | Salida confirmada / se cancela |
-| `en_curso` | `finalizada` | Aviso de llegada |
-| `en_curso` | `vencida` | Pasó la hora comprometida de retorno |
-| `en_curso` | `en_alerta` | SOS |
-| `vencida` | `en_curso` | Prórroga aceptada |
-| `vencida` | `en_alerta` | El escalamiento llega a la unidad |
-| `en_alerta` | `finalizada` | Falsa alarma (cierra el carabinero) |
-| `en_alerta` | `en_operativo` | El carabinero escala y asigna rescatista |
-| `en_operativo` | `cierre_pendiente` | El rescatista pide el cierre |
-| `cierre_pendiente` | `finalizada` | El carabinero confirma el cierre |
-| `cierre_pendiente` | `en_operativo` | El carabinero rechaza el cierre |
-
-Toma la máquina del modelo de datos (`documents/TrekkMe_modelo_datos.png`) y le agrega `cierre_pendiente` según la decisión 3.1 de `documents/decisiones-de-negocio.md`.
-
-## Desarrollo
+Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
 
 ```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate --seed   # usa SQLite (database/database.sqlite) por defecto
-php artisan serve
-php artisan test
+composer require laravel/boost --dev
+
+php artisan boost:install
 ```
 
-Para usar MySQL de XAMPP, cambia en `.env` `DB_CONNECTION=mysql` y descomenta las variables `DB_*`.
+Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
-## Pendiente (ver `documents/decisiones-de-negocio.md`, sección 7)
+## Contributing
 
-- Usuarios con rol, RUT y fecha de nacimiento + login con Sanctum
-- Excursiones, participantes e invitaciones
-- Operativos y bitácora con control de versión (409)
-- Transiciones de estado vía endpoints (escalar, solicitar/confirmar/rechazar cierre)
-- Rastro GPS con batería
-- Columnas geográficas al pasar a una BD con soporte espacial
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

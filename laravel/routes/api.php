@@ -1,13 +1,38 @@
 <?php
 
-use App\Http\Controllers\Api\TerritorioController;
-use Illuminate\Http\Request;
+use App\Enums\AccionExcursion;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CarabineroController;
+use App\Http\Controllers\RescatistaController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Todas las rutas quedan bajo /api/v1
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
-// Catálogo de territorio: público por ahora, no tiene datos personales
-Route::get('/areas', [TerritorioController::class, 'areas']);
-Route::get('/areas/{area}/senderos', [TerritorioController::class, 'senderos'])->whereNumber('area');
+Route::middleware('firebase')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/yo', [AuthController::class, 'yo']);
+
+    // Catálogo para los selectores (carabineros y rescatistas)
+    Route::get('/senderos', [RescatistaController::class, 'senderos'])->middleware('rol:carabinero,rescatista');
+
+    Route::middleware('rol:rescatista')->prefix('rescatista')->group(function () {
+        Route::post('/casos/{id}/solicitar-cierre', [RescatistaController::class, 'solicitarCierre']);
+
+        Route::post('/casos/{casoId}/bitacora', [RescatistaController::class, 'crearBitacora']);
+        Route::put('/bitacora/{id}', [RescatistaController::class, 'editarBitacora']);
+        Route::delete('/bitacora/{id}', [RescatistaController::class, 'eliminarBitacora']);
+    });
+
+    Route::middleware('rol:carabinero')->prefix('carabinero')->group(function () {
+        Route::get('/rescatistas', [CarabineroController::class, 'rescatistas']);
+
+        Route::post('/excursiones/{id}/{accion}', [CarabineroController::class, 'transicion'])
+            ->whereIn('accion', [
+                AccionExcursion::Escalar->value,
+                AccionExcursion::Cerrar->value,
+                AccionExcursion::ConfirmarCierre->value,
+                AccionExcursion::RechazarCierre->value,
+            ]);
+    });
+});
