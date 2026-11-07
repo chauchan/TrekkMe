@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // El carabinero lee solo los avisos de su jurisdicción
+    match /avisos/{id} {
+      allow read: if request.auth != null
+                  && request.auth.token.rol == 'carabinero'
+                  && resource.data.jurisdiccionId == request.auth.token.jurisdiccionId;
+      allow write: if false;
+    }
+
+    // El rescatista lee solo la ficha de los casos que tiene asignados
+    match /excursiones/{id} {
+      allow read: if request.auth != null
+                  && request.auth.token.rol == 'rescatista'
+                  && resource.data.rescatistaId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // La bitácora la lee solo el rescatista asignado al caso
+    match /bitacora/{id} {
+      allow read: if request.auth != null
+                  && request.auth.token.rol == 'rescatista'
+                  && get(/databases/$(db)/documents/excursiones/$(resource.data.excursionId))
+                       .data.rescatistaId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Todo lo demás, cerrado
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   AlertController,
   IonBadge,
@@ -17,19 +18,16 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
-import {
-  ESTADO_CIERRE_PENDIENTE,
-  ESTADO_EN_OPERATIVO,
-  Excursion,
-} from '../../../models/excursion';
-import { RESCATISTA_ACTUAL } from '../../../models/rescatista';
-import { ExcursionService } from '../../../services/excursion.service';
+import { ESTADO_EN_OPERATIVO, Excursion } from '../../../models/excursion';
+import { CasosService } from './casos.service';
 
 // Lista de casos asignados al rescatista actual.
 // Desde cada caso se abre su bitácora, su ficha y su vista de terreno, y se puede pedir el cierre
 @Component({
   selector: 'app-casos',
   templateUrl: './casos.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [CasosService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
@@ -58,8 +56,11 @@ export class CasosPage {
   cargando = signal(true);
   error = signal('');
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   constructor(
-    private servicio: ExcursionService,
+    private servicio: CasosService,
     private alertas: AlertController,
     private toasts: ToastController
   ) { }
@@ -69,12 +70,18 @@ export class CasosPage {
     this.cargar();
   }
 
-  // Pide los casos del rescatista actual y actualiza los signals
+  // Ionic lo llama al salir de la página: deja de escuchar Firestore
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha los casos del rescatista: la lista se actualiza sola cada vez que alguno cambia
   cargar() {
+    this.suscripcion?.unsubscribe();   // por si se llama desde "Reintentar"
     this.cargando.set(true);
     this.error.set('');
 
-    this.servicio.listarCasos(RESCATISTA_ACTUAL).subscribe({
+    this.suscripcion = this.servicio.listar().subscribe({
       next: (casos) => {
         this.casos.set(casos);
         this.cargando.set(false);
@@ -104,10 +111,10 @@ export class CasosPage {
     await alerta.present();
   }
 
-  // Deja el caso en "Cierre pendiente", avisa con un toast y recarga la lista
+  // Deja el caso en "Cierre pendiente" y avisa con un toast (la lista se actualiza sola)
   async pedirCierre(caso: Excursion) {
     try {
-      await this.servicio.cambiarEstado(caso.id, ESTADO_EN_OPERATIVO, ESTADO_CIERRE_PENDIENTE);
+      await this.servicio.solicitarCierre(caso.id);
       const toast = await this.toasts.create({
         message: 'Cierre solicitado. Falta la confirmación de Carabineros.',
         duration: 3000,
@@ -122,6 +129,5 @@ export class CasosPage {
       });
       await toast.present();
     }
-    this.cargar();
   }
 }

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   IonBackButton,
   IonButton,
@@ -19,13 +20,15 @@ import {
   IonToolbar,
 } from '@ionic/angular';
 import { Excursion } from '../../../models/excursion';
-import { ExcursionService } from '../../../services/excursion.service';
+import { TerrenoService } from './terreno.service';
 
 // Vista de terreno: lo mínimo que el rescatista necesita mientras busca, pensada para el teléfono.
 // Muestra el mapa con la última ubicación del excursionista, la posición propia y un resumen del caso.
 @Component({
   selector: 'app-terreno',
   templateUrl: './terreno.page.html',
+  // El servicio es propio de esta página: se crea con ella y ninguna otra lo usa
+  providers: [TerrenoService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -66,36 +69,57 @@ export class TerrenoPage implements OnInit {
   errorPosicion = signal('');
 
   constructor(
-    private servicio: ExcursionService,
+    private servicio: TerrenoService,
     private rutaActual: ActivatedRoute,
     private sanitizador: DomSanitizer
   ) { }
 
+  // Conexión en vivo con Firestore: se corta al salir de la página
+  private suscripcion?: Subscription;
+
   ngOnInit() {
     // Lee el :id de la URL /rescatista/casos/:id/terreno
     this.id = this.rutaActual.snapshot.paramMap.get('id')!;
-    this.cargar();
     this.buscarMiPosicion();
   }
 
-  // Trae el caso desde el servicio. También sirve para revisar si llegó una ubicación nueva
-  async cargar() {
+  ionViewWillEnter() {
+    this.cargar();
+  }
+
+  ionViewWillLeave() {
+    this.suscripcion?.unsubscribe();
+  }
+
+  // Escucha el caso: cuando llega una ubicación nueva del excursionista, el mapa se mueve solo
+  cargar() {
+    this.suscripcion?.unsubscribe();
     this.cargando.set(true);
     this.error.set('');
-    try {
-      const caso = await this.servicio.obtener(this.id);
-      if (caso === null) {
-        this.error.set('El caso no existe.');
-      } else {
-        this.caso.set(caso);
-        if (caso.ultimaLat !== null && caso.ultimaLng !== null) {
-          this.mapa.set(this.armarMapa(caso.ultimaLat, caso.ultimaLng));
+
+    this.suscripcion = this.servicio.obtener(this.id).subscribe({
+      next: (caso) => {
+        if (caso === null) {
+          this.error.set('El caso no existe.');
+        } else {
+          const anterior = this.caso();
+          this.error.set('');
+          this.caso.set(caso);
+
+          // Rearma el mapa solo si la ubicación cambió
+          const cambioUbicacion =
+            anterior === null || anterior.ultimaLat !== caso.ultimaLat || anterior.ultimaLng !== caso.ultimaLng;
+          if (cambioUbicacion && caso.ultimaLat !== null && caso.ultimaLng !== null) {
+            this.mapa.set(this.armarMapa(caso.ultimaLat, caso.ultimaLng));
+          }
         }
-      }
-    } catch (error: any) {
-      this.error.set(error.message);
-    }
-    this.cargando.set(false);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        this.error.set(error.message);
+        this.cargando.set(false);
+      },
+    });
   }
 
   // Arma la dirección de un mapa de OpenStreetMap centrado en un punto, con un marcador
@@ -114,30 +138,13 @@ export class TerrenoPage implements OnInit {
     this.buscandoPosicion.set(true);
     this.errorPosicion.set('');
 
-    navigator.geolocation.getCurrentPosition(
-      (posicion) => {
-        this.miLat.set(posicion.coords.latitude);
-        this.miLng.set(posicion.coords.longitude);
-        this.buscandoPosicion.set(false);
-      },
-      () => {
-        this.errorPosicion.set('No se pudo obtener tu posición. Revisa el permiso de ubicación.');
-        this.buscandoPosicion.set(false);
-      }
-    );
-  }
-
-  // Distancia en línea recta entre dos puntos, en metros (fórmula del haversine)
-  distanciaEnMetros(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const radioTierra = 6371000;
-    const aRadianes = Math.PI / 180;
-    const diferenciaLat = (lat2 - lat1) * aRadianes;
-    const diferenciaLng = (lng2 - lng1) * aRadianes;
-    const a =
-      Math.sin(diferenciaLat / 2) * Math.sin(diferenciaLat / 2) +
-      Math.cos(lat1 * aRadianes) * Math.cos(lat2 * aRadianes) *
-      Math.sin(diferenciaLng / 2) * Math.sin(diferenciaLng / 2);
-    return radioTierra * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    this.servicio.miPosicion()
+      .then((posicion) => {
+        this.miLat.set(posicion.lat);
+        this.miLng.set(posicion.lng);
+      })
+      .catch((error: Error) => this.errorPosicion.set(error.message))
+      .finally(() => this.buscandoPosicion.set(false));
   }
 
   // Texto con la distancia entre el rescatista y la última ubicación del excursionista
@@ -148,7 +155,10 @@ export class TerrenoPage implements OnInit {
       return '';
     }
 
-    const metros = this.distanciaEnMetros(miLat, miLng, caso.ultimaLat, caso.ultimaLng);
+    const metros = this.servicio.distanciaEnMetros(
+      { lat: miLat, lng: miLng },
+      { lat: caso.ultimaLat, lng: caso.ultimaLng }
+    );
     if (metros < 1000) {
       return 'Estás a ' + Math.round(metros) + ' metros de la última ubicación.';
     }

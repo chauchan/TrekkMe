@@ -21,9 +21,10 @@
     <ion-list lines="full" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
       <ion-item>
         <ion-select label="Ruta" labelPlacement="stacked" placeholder="Elige un sendero" [(ngModel)]="ruta">
-          @for (opcion of rutas; track opcion) {
-            <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+          @for (opcion of rutas(); track opcion.id) {
+            <ion-select-option [value]="opcion.id">{{ opcion.nombre }}</ion-select-option>
           }
+          <ion-select-option [value]="fueraDeSendero">Fuera de sendero</ion-select-option>
         </ion-select>
       </ion-item>
 
