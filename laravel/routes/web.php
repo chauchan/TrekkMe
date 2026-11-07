@@ -1,18 +1,27 @@
 <?php
 
+use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\LoginWebController;
+use App\Http\Controllers\ExcursionController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Controller;
-use App\Models\User;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/login', [LoginWebController::class, 'create'])->name('login');
+Route::post('/login', [LoginWebController::class, 'store'])->middleware('throttle:login');
 
-Route::get('/hola', [Controller::class, 'hola']);
-Route::get('/chao', [Controller::class, 'chao']);
-Route::get('/index', [Controller::class, 'index']);
+Route::middleware('admin')->group(function () {
+    Route::get('/', fn () => redirect('/usuarios'));
+    Route::post('/logout', [LoginWebController::class, 'destroy']);
 
-Route::get('/usuario/{id}', function ($id) {
-    $usuario = User::find($id);
-    return $usuario;
+    Route::get('/usuarios', [UsuarioController::class, 'index']);
+    Route::get('/usuarios/crear', [UsuarioController::class, 'create']);
+    Route::post('/usuarios', [UsuarioController::class, 'store']);
+
+    Route::get('/excursiones', [ExcursionController::class, 'index']);
+    Route::get('/excursiones/crear', [ExcursionController::class, 'create']);
+    Route::post('/excursiones', [ExcursionController::class, 'store']);
+
+    Route::get('/bitacoras', [BitacoraController::class, 'index']);
+    Route::get('/bitacoras/crear', [BitacoraController::class, 'create']);
+    Route::post('/bitacoras', [BitacoraController::class, 'store']);
 });
