@@ -75,6 +75,14 @@ class UsuarioRepository extends Repositorio
         return $id;
     }
 
+    // Reasigna la contraseña de un usuario existente. Solo reescribe passwordHash.
+    public function cambiarPassword(string $id, string $password): void
+    {
+        $this->firestore->confirmar([$this->firestore->actualizacion('usuarios', $id, [
+            'passwordHash' => Hash::make($password),
+        ])]);
+    }
+
     // El hash de la contraseña no sale de aquí hacia las vistas
     private function normalizar(array $doc): array
     {
