@@ -30,6 +30,7 @@ class FirestoreSeedCommand extends Command
 
     // id => [nombre, correo, rol, jurisdicción]
     private const USUARIOS = [
+        'adm-001' => ['Admin de Prueba', 'sysadmin@trekkme.cl', RolUsuario::Admin, ''],
         'carab-001' => ['Carabinero de Prueba', 'carabinero@trekkme.test', RolUsuario::Carabinero, 'jur-001'],
         'carab-002' => ['Carabinero Biobío', 'carabinero2@trekkme.test', RolUsuario::Carabinero, 'jur-002'],
         'resc-001' => ['Andrés Poblete', 'andres.poblete@trekkme.test', RolUsuario::Rescatista, 'jur-001'],
@@ -107,7 +108,7 @@ class FirestoreSeedCommand extends Command
             $faltan = array_filter([
                 'email' => $email, 'rol' => $rol->value, 'jurisdiccionId' => $jurisdiccion,
                 'passwordHash' => Hash::make('password'),
-            ], fn ($v, $campo) => ! isset($actual[$campo]) || $actual[$campo] === '', ARRAY_FILTER_USE_BOTH);
+            ], fn ($v, $campo) => $v !== '' && (! isset($actual[$campo]) || $actual[$campo] === ''), ARRAY_FILTER_USE_BOTH);
 
             if (! $faltan) {
                 $this->line("usuarios/{$id}: ya completo");
