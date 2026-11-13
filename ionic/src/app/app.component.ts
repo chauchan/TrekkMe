@@ -17,7 +17,7 @@ import {
 } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { url } from './core/api';
-import { cerrarSesion, obtenerPerfil, obtenerToken } from './core/sesion';
+import { cerrarSesion, obtenerPerfil } from './core/sesion';
 
 @Component({
   selector: 'app-root',
@@ -48,7 +48,7 @@ export class AppComponent {
   // Cierra la sesión en la API y en Firebase, y vuelve al login
   async salir() {
     try {
-      if (obtenerToken()) {
+      if (obtenerPerfil()) {
         await firstValueFrom(this.http.post(url('/logout'), {}));
       }
     } catch {

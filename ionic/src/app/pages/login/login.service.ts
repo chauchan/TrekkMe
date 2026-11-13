@@ -13,8 +13,9 @@ export class LoginService {
   // Pide el token a la API, entra a Firebase y devuelve el perfil para saber adónde ir
   async iniciarSesion(correo: string, clave: string): Promise<Perfil> {
     try {
-      const respuesta = await firstValueFrom(
-        this.http.post<any>(url('/login'), { email: correo, password: clave })
+      // La API envuelve la respuesta en "data" (ver laravel/API.md)
+      const { data: respuesta } = await firstValueFrom(
+        this.http.post<{ data: any }>(url('/login'), { email: correo, password: clave })
       );
 
       if (respuesta.perfil !== 'carabinero' && respuesta.perfil !== 'rescatista') {
@@ -22,7 +23,6 @@ export class LoginService {
       }
 
       await guardarSesion({
-        token: respuesta.token,
         firebaseToken: respuesta.firebase_token,
         perfil: respuesta.perfil,
         usuarioId: String(respuesta.usuario_id),

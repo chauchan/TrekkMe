@@ -4,21 +4,19 @@ import { auth } from './firebase';
 
 export type Perfil = 'carabinero' | 'rescatista';
 
-// Datos de la sesión actual (en memoria)
-let token: string | null = null;
+// Datos de la sesión actual (en memoria). No hay token propio de la API:
+// la API se autentica con el ID token de Firebase (ver obtenerToken).
 let perfil: Perfil | null = null;
 let usuarioId: string | null = null;
 let jurisdiccionId: string | null = null;
 
-// Después del login: guarda la sesión de la API y entra a Firebase con el token personalizado
+// Después del login: guarda la sesión y entra a Firebase con el token personalizado
 export async function guardarSesion(datos: {
-  token: string;
   firebaseToken: string;
   perfil: Perfil;
   usuarioId: string;
   jurisdiccionId: string | null;
 }) {
-  token = datos.token;
   perfil = datos.perfil;
   usuarioId = datos.usuarioId;
   jurisdiccionId = datos.jurisdiccionId;
@@ -26,7 +24,7 @@ export async function guardarSesion(datos: {
   await signInWithCustomToken(auth, datos.firebaseToken);
   await Preferences.set({
     key: 'sesion',
-    value: JSON.stringify({ token, perfil, usuarioId, jurisdiccionId }),
+    value: JSON.stringify({ perfil, usuarioId, jurisdiccionId }),
   });
 }
 
@@ -36,7 +34,6 @@ export async function cargarSesion() {
   const { value } = await Preferences.get({ key: 'sesion' });
   if (value) {
     const sesion = JSON.parse(value);
-    token = sesion.token;
     perfil = sesion.perfil;
     usuarioId = sesion.usuarioId;
     jurisdiccionId = sesion.jurisdiccionId;
@@ -52,7 +49,6 @@ export async function cargarSesion() {
 }
 
 export async function cerrarSesion() {
-  token = null;
   perfil = null;
   usuarioId = null;
   jurisdiccionId = null;
@@ -60,7 +56,9 @@ export async function cerrarSesion() {
   await Preferences.remove({ key: 'sesion' });
 }
 
-export const obtenerToken = () => token;
+// ID token de Firebase para la API. Firebase lo renueva solo cuando está por vencer.
+export const obtenerToken = async (): Promise<string | null> =>
+  auth.currentUser ? auth.currentUser.getIdToken() : null;
 export const obtenerPerfil = () => perfil;
 export const obtenerUsuarioId = () => usuarioId;
 export const obtenerJurisdiccionId = () => jurisdiccionId;
