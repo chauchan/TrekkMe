@@ -61,7 +61,7 @@ Pública. Máximo 5 intentos por minuto por correo e IP.
   "jurisdiccion_id": "jur-001"
 } }
 ```
-- `perfil`: `carabinero` o `rescatista`. Otros roles reciben **403**.
+- `perfil`: `carabinero`, `rescatista` o `excursionista` (app Flutter). Otros roles reciben **403**.
 - 422 si el correo o la contraseña son incorrectos.
 
 ### `GET /yo`
@@ -71,7 +71,7 @@ Devuelve quién es el usuario según el token: `{ "data": { "id", "rol", "jurisd
 204. No hay sesión en el servidor. La app cierra su sesión de Firebase (`signOut`).
 
 ### `GET /senderos`
-Roles: carabinero, rescatista. Para llenar selectores.
+Roles: carabinero, rescatista, excursionista. Para llenar selectores.
 ```json
 { "data": [ { "id": "sen-001", "nombre": "...", "jurisdiccion_id": "jur-001" } ] }
 ```

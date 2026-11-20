@@ -27,8 +27,8 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => 'Correo o contraseña incorrectos.']);
         }
 
-        // Las apps móviles son solo para carabineros y rescatistas
-        if (! in_array($usuario['rol'], [RolUsuario::Carabinero, RolUsuario::Rescatista], true)) {
+        // Las apps móviles son para carabineros y rescatistas (Ionic) y excursionistas (Flutter)
+        if (! in_array($usuario['rol'], [RolUsuario::Carabinero, RolUsuario::Rescatista, RolUsuario::Excursionista], true)) {
             return response()->json(['message' => 'Este perfil no tiene acceso a la aplicación.'], 403);
         }
 

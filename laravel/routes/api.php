@@ -13,8 +13,8 @@ Route::middleware('firebase')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/yo', [AuthController::class, 'yo']);
 
-    // Catálogo para los selectores (carabineros y rescatistas)
-    Route::get('/senderos', [RescatistaController::class, 'senderos'])->middleware('rol:carabinero,rescatista');
+    // Catálogo para los selectores (carabineros, rescatistas y excursionistas)
+    Route::get('/senderos', [RescatistaController::class, 'senderos'])->middleware('rol:carabinero,rescatista,excursionista');
 
     Route::middleware('rol:rescatista')->prefix('rescatista')->group(function () {
         Route::post('/casos/{id}/solicitar-cierre', [RescatistaController::class, 'solicitarCierre']);
