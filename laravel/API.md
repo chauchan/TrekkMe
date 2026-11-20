@@ -76,6 +76,45 @@ Roles: carabinero, rescatista, excursionista. Para llenar selectores.
 { "data": [ { "id": "sen-001", "nombre": "...", "jurisdiccion_id": "jur-001" } ] }
 ```
 
+## Excursionista (`/excursionista/...`)
+
+App Flutter. Solo ve y crea **sus propias** excursiones (las que tienen su id en `excursionistaId`). No lee Firestore: todo pasa por esta API.
+
+### `GET /excursionista/excursiones`
+Mis excursiones, las más recientes primero. Sin datos médicos.
+```json
+{ "data": [ {
+  "id": "exc-010", "sendero_id": "sen-001", "sendero": "PN Nahuelbuta - Piedra del Águila",
+  "estado": "planificada",
+  "salida_at": "2026-11-21T08:00:00-03:00", "retorno_at": "2026-11-21T16:00:00-03:00",
+  "contacto_nombre": "Paula Díaz", "contacto_telefono": "+56 9 5555 0108",
+  "detalle": null, "lleva_carpa": false, "color_carpa": null, "lleva_linterna": true,
+  "acompanantes": [ { "nombre": "Tomás Garrido", "rut": "20.000.015-5" } ],
+  "ultima_lat": null, "ultima_lng": null, "ultima_ubicacion_at": null, "bateria": null
+} ] }
+```
+
+### `POST /excursionista/excursiones`
+Avisa una salida. Queda `planificada`, sin rescatista. El nombre sale de la cuenta del token.
+
+```json
+{
+  "sendero_id": "sen-001",
+  "salida_at": "2026-11-21T08:00:00-03:00",
+  "retorno_at": "2026-11-21T16:00:00-03:00",
+  "contacto_nombre": "Paula Díaz", "contacto_telefono": "+56 9 5555 0108",
+  "rut": "20.000.004-4", "telefono": "+56 9 5555 0107", "edad": 23,
+  "experiencia": "Principiante", "condiciones_medicas": "Ninguna",
+  "detalle": "Polerón amarillo.", "lleva_carpa": false, "color_carpa": null, "lleva_linterna": true,
+  "acompanantes": [ { "nombre": "Tomás Garrido", "rut": "20.000.015-5", "edad": 23, "condiciones_medicas": "Ninguna" } ]
+}
+```
+- Obligatorios: `sendero_id`, `salida_at`, `retorno_at` (posterior a la salida), `contacto_nombre`, `contacto_telefono`, `rut`, `telefono`, `edad`, `experiencia` (`Principiante`, `Intermedio` o `Avanzado`).
+- Los datos personales (`rut`, `telefono`, `edad`, `experiencia`, `condiciones_medicas`) los envía la app: todavía no viven en el perfil del usuario.
+- Los acompañantes son sin cuenta (solo datos mínimos).
+- 201: `{ "data": { ...la excursión, igual que en el listado } }`
+- 422 si falta un dato o el `sendero_id` no existe.
+
 ## Carabinero (`/carabinero/...`)
 
 Solo puede actuar sobre avisos de **su jurisdicción**. Si no, 403.
