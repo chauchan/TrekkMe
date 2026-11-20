@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccionExcursion;
 use App\Enums\EstadoExcursion;
 use App\Services\Firestore\CatalogoRepository;
 use App\Services\Firestore\ExcursionRepository;
 use App\Services\Firestore\UsuarioRepository;
+use App\Services\TransicionService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -106,6 +108,50 @@ class ExcursionistaController extends Controller
         ], $sendero['id'], $sendero['jurisdiccionId']);
 
         return response()->json(['data' => $this->aRespuesta($excursiones->aviso($id))], 201);
+    }
+
+    // Iniciar (planificada → en curso) o confirmar el regreso (en curso → cerrada).
+    // Solo sobre excursiones propias; si el estado ya cambió responde 409.
+    public function transicion(Request $request, string $id, string $accion, TransicionService $transiciones): JsonResponse
+    {
+        $datos = $request->validate([
+            'estado_esperado' => ['required', Rule::enum(EstadoExcursion::class)],
+        ]);
+
+        $resultado = $transiciones->aplicar(
+            $id,
+            AccionExcursion::from($accion),
+            EstadoExcursion::from($datos['estado_esperado']),
+            $request->attributes->get('usuario'),
+        );
+
+        return response()->json(['data' => $resultado]);
+    }
+
+    // Última ubicación y batería del teléfono del excursionista
+    public function ubicacion(Request $request, string $id, TransicionService $transiciones): JsonResponse
+    {
+        $datos = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+            'bateria' => ['nullable', 'integer', 'between:0,100'],
+        ]);
+
+        $guardada = $transiciones->registrarUbicacion(
+            $id,
+            $request->attributes->get('usuario'),
+            (float) $datos['lat'],
+            (float) $datos['lng'],
+            isset($datos['bateria']) ? (int) $datos['bateria'] : null,
+        );
+
+        return response()->json(['data' => [
+            'id' => $guardada['id'],
+            'ultima_lat' => $guardada['ultimaLat'],
+            'ultima_lng' => $guardada['ultimaLng'],
+            'ultima_ubicacion_at' => $guardada['ultimaUbicacionAt']->toIso8601String(),
+            'bateria' => $guardada['bateria'],
+        ]]);
     }
 
     // Aviso de Firestore → JSON de la API (snake_case, fechas ISO 8601, sin datos médicos)

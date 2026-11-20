@@ -115,6 +115,37 @@ Avisa una salida. Queda `planificada`, sin rescatista. El nombre sale de la cuen
 - 201: `{ "data": { ...la excursión, igual que en el listado } }`
 - 422 si falta un dato o el `sendero_id` no existe.
 
+### `POST /excursionista/excursiones/{id}/{accion}`
+Cambia el estado de una excursión **propia**. `accion`:
+
+| accion | Estado actual → nuevo |
+|---|---|
+| `iniciar` | `planificada` → `en_curso` |
+| `regresar` | `en_curso` → `cerrada` ("Ya volví") |
+
+```json
+{ "estado_esperado": "planificada" }
+```
+200: `{ "data": { "id": "exc-010", "estado": "en_curso" } }`
+
+- `estado_esperado` es el estado que la app tiene en pantalla. Si ya cambió (por ejemplo, pasó a `en_alerta`), responde **409** "Tu excursión cambió de estado. Actualiza e intenta de nuevo."
+- **403** si la excursión no es suya. **409** si la acción no corresponde al estado actual.
+- `regresar` solo vale desde `en_curso`. Si la excursión ya está en alerta, la cierra el carabinero.
+
+### `POST /excursionista/excursiones/{id}/ubicacion`
+Guarda la última ubicación y la batería del teléfono. Se puede enviar mientras la excursión esté `en_curso`, `en_alerta`, `en_operativo` o `cierre_pendiente`.
+
+```json
+{ "lat": -37.8235, "lng": -73.0312, "bateria": 78 }
+```
+- `lat` entre -90 y 90, `lng` entre -180 y 180, `bateria` entero de 0 a 100 (opcional).
+- 200: `{ "data": { "id", "ultima_lat", "ultima_lng", "ultima_ubicacion_at", "bateria" } }`
+- **409** si la excursión no está en uno de esos estados (planificada o cerrada). **403** si no es suya.
+
+## Paso automático a alerta
+
+Ningún cliente pasa una excursión a `en_alerta`. Lo hace el comando programado `php artisan excursiones:marcar-alertas`: cada minuto pasa a `en_alerta` las excursiones `en_curso` cuya hora de retorno ya venció (y así aparecen en la bandeja del carabinero). Requiere el programador activo (`php artisan schedule:work`) o ejecutarlo a mano.
+
 ## Carabinero (`/carabinero/...`)
 
 Solo puede actuar sobre avisos de **su jurisdicción**. Si no, 403.

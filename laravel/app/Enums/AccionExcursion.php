@@ -10,6 +10,8 @@ enum AccionExcursion: string
     case ConfirmarCierre = 'confirmar-cierre';
     case RechazarCierre = 'rechazar-cierre';
     case SolicitarCierre = 'solicitar-cierre';
+    case Iniciar = 'iniciar';
+    case Regresar = 'regresar';
 
     public function desde(): EstadoExcursion
     {
@@ -17,6 +19,8 @@ enum AccionExcursion: string
             self::Escalar, self::Cerrar => EstadoExcursion::EnAlerta,
             self::ConfirmarCierre, self::RechazarCierre => EstadoExcursion::CierrePendiente,
             self::SolicitarCierre => EstadoExcursion::EnOperativo,
+            self::Iniciar => EstadoExcursion::Planificada,
+            self::Regresar => EstadoExcursion::EnCurso,
         };
     }
 
@@ -24,14 +28,19 @@ enum AccionExcursion: string
     {
         return match ($this) {
             self::Escalar, self::RechazarCierre => EstadoExcursion::EnOperativo,
-            self::Cerrar, self::ConfirmarCierre => EstadoExcursion::Cerrada,
+            self::Cerrar, self::ConfirmarCierre, self::Regresar => EstadoExcursion::Cerrada,
             self::SolicitarCierre => EstadoExcursion::CierrePendiente,
+            self::Iniciar => EstadoExcursion::EnCurso,
         };
     }
 
     // Rol que puede pedir la acción
     public function rol(): RolUsuario
     {
-        return $this === self::SolicitarCierre ? RolUsuario::Rescatista : RolUsuario::Carabinero;
+        return match ($this) {
+            self::SolicitarCierre => RolUsuario::Rescatista,
+            self::Iniciar, self::Regresar => RolUsuario::Excursionista,
+            default => RolUsuario::Carabinero,
+        };
     }
 }

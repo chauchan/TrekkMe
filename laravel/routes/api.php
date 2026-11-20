@@ -20,6 +20,12 @@ Route::middleware('firebase')->group(function () {
     Route::middleware('rol:excursionista')->prefix('excursionista')->group(function () {
         Route::get('/excursiones', [ExcursionistaController::class, 'index']);
         Route::post('/excursiones', [ExcursionistaController::class, 'crear']);
+        Route::post('/excursiones/{id}/ubicacion', [ExcursionistaController::class, 'ubicacion']);
+        Route::post('/excursiones/{id}/{accion}', [ExcursionistaController::class, 'transicion'])
+            ->whereIn('accion', [
+                AccionExcursion::Iniciar->value,
+                AccionExcursion::Regresar->value,
+            ]);
     });
 
     Route::middleware('rol:rescatista')->prefix('rescatista')->group(function () {
