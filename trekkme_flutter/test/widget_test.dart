@@ -1,19 +1,56 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:trekkme/main.dart';
 
+// Credenciales de demo definidas en lib/data/auth_demo_repository.dart.
+const _email = 'trekker@trekkme.test';
+const _password = 'trekker123';
+
+Future<void> _entrar(WidgetTester tester, String email, String password) async {
+  await tester.enterText(find.byType(TextFormField).at(0), email);
+  await tester.enterText(find.byType(TextFormField).at(1), password);
+  await tester.tap(find.text('Entrar'));
+  await tester.pump(); // inicia la petición
+  await tester.pump(const Duration(seconds: 1)); // respuesta del demo
+}
+
 void main() {
-  testWidgets('La home lista las excursiones con su estado', (tester) async {
+  testWidgets('Sin sesión se ve el login y valida campos vacíos',
+      (tester) async {
     await tester.pumpWidget(MyApp());
-    expect(find.text('Mis excursiones'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Mis excursiones'), findsNothing);
 
-    // El repositorio demo simula latencia.
-    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Entrar'));
     await tester.pump();
+    expect(find.text('Ingresa tu correo.'), findsOneWidget);
+    expect(find.text('Ingresa tu contraseña.'), findsOneWidget);
+  });
 
+  testWidgets('Credenciales malas muestran el error y no entran',
+      (tester) async {
+    await tester.pumpWidget(MyApp());
+    await _entrar(tester, _email, 'otra-clave');
+
+    expect(find.text('Correo o contraseña incorrectos.'), findsOneWidget);
+    expect(find.text('Mis excursiones'), findsNothing);
+  });
+
+  testWidgets('Login correcto lista excursiones y se puede cerrar sesión',
+      (tester) async {
+    await tester.pumpWidget(MyApp());
+    await _entrar(tester, _email, _password);
+
+    expect(find.text('Mis excursiones'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1)); // latencia del repo demo
     expect(find.text('PN Nahuelbuta - Piedra del Águila'), findsOneWidget);
     expect(find.text('En curso'), findsOneWidget);
-    expect(find.text('Planificada'), findsOneWidget);
-    expect(find.text('Cerrada'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.logout));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Mis excursiones'), findsNothing);
   });
 }

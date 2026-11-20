@@ -6,9 +6,16 @@ import '../explorar/explorar_page.dart';
 
 /// Home del trekker: sus excursiones con el estado actual (F3).
 class ExcursionesPage extends StatefulWidget {
-  const ExcursionesPage({super.key, required this.repo});
+  const ExcursionesPage({
+    super.key,
+    required this.repo,
+    required this.nombreUsuario,
+    required this.onLogout,
+  });
 
   final ExcursionRepository repo;
+  final String nombreUsuario;
+  final VoidCallback onLogout;
 
   @override
   State<ExcursionesPage> createState() => _ExcursionesPageState();
@@ -43,6 +50,11 @@ class _ExcursionesPageState extends State<ExcursionesPage> {
               context,
               MaterialPageRoute(builder: (_) => const ExplorarPage()),
             ),
+          ),
+          IconButton(
+            tooltip: 'Cerrar sesión (${widget.nombreUsuario})',
+            icon: const Icon(Icons.logout),
+            onPressed: widget.onLogout,
           ),
         ],
       ),
