@@ -98,9 +98,9 @@ class ExcursionDemoRepository implements ExcursionRepository {
   }
 
   @override
-  Future<Excursion> iniciar(String id) async {
+  Future<Excursion> iniciar(Excursion excursion) async {
     await _latencia();
-    final i = _indice(id);
+    final i = _indice(excursion.id);
     if (_excursiones[i].estado != EstadoExcursion.planificada) {
       throw Exception('Solo se puede iniciar una excursión planificada.');
     }
@@ -110,13 +110,13 @@ class ExcursionDemoRepository implements ExcursionRepository {
 
   @override
   Future<Excursion> enviarUbicacion(
-    String id, {
+    Excursion excursion, {
     required double lat,
     required double lng,
-    required int bateria,
+    int? bateria,
   }) async {
     await _latencia();
-    final i = _indice(id);
+    final i = _indice(excursion.id);
     return _excursiones[i] = _excursiones[i].copyWith(
       ultimaLat: lat,
       ultimaLng: lng,
@@ -126,9 +126,9 @@ class ExcursionDemoRepository implements ExcursionRepository {
   }
 
   @override
-  Future<Excursion> regresar(String id) async {
+  Future<Excursion> regresar(Excursion excursion) async {
     await _latencia();
-    final i = _indice(id);
+    final i = _indice(excursion.id);
     if (_excursiones[i].estado != EstadoExcursion.enCurso) {
       throw Exception('Solo se puede cerrar una excursión en curso.');
     }

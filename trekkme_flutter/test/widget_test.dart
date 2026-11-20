@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:trekkme/core/session.dart';
+import 'package:trekkme/data/auth_demo_repository.dart';
+import 'package:trekkme/data/excursion_demo_repository.dart';
 import 'package:trekkme/main.dart';
+
+// La app de verdad usa la API; estas pruebas la arman con los repositorios de demo.
+MyApp _app() => MyApp(
+      session: Session(AuthDemoRepository()),
+      repo: ExcursionDemoRepository(),
+    );
 
 // Credenciales de demo definidas en lib/data/auth_demo_repository.dart.
 const _email = 'trekker@trekkme.test';
@@ -18,7 +27,7 @@ Future<void> _entrar(WidgetTester tester, String email, String password) async {
 void main() {
   testWidgets('Sin sesión se ve el login y valida campos vacíos',
       (tester) async {
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(_app());
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.text('Mis excursiones'), findsNothing);
 
@@ -30,7 +39,7 @@ void main() {
 
   testWidgets('Credenciales malas muestran el error y no entran',
       (tester) async {
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(_app());
     await _entrar(tester, _email, 'otra-clave');
 
     expect(find.text('Correo o contraseña incorrectos.'), findsOneWidget);
@@ -39,7 +48,7 @@ void main() {
 
   testWidgets('Login correcto lista excursiones y se puede cerrar sesión',
       (tester) async {
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(_app());
     await _entrar(tester, _email, _password);
 
     expect(find.text('Mis excursiones'), findsOneWidget);

@@ -4,4 +4,10 @@ class Sendero {
 
   final String id;
   final String nombre;
+
+  /// Fila de `GET /senderos`: `{ id, nombre, jurisdiccion_id }`.
+  factory Sendero.fromJson(Map<String, dynamic> json) => Sendero(
+        id: json['id'] as String,
+        nombre: json['nombre'] as String,
+      );
 }
