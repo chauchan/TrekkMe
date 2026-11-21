@@ -31,6 +31,18 @@ class ExcursionRepository extends Repositorio
         return $doc ? $this->normalizar($doc) : null;
     }
 
+    // Avisos de las excursiones creadas por un excursionista, las más recientes primero.
+    // Se lee "avisos" (sin datos médicos) y no "excursiones": al trekker no le hace falta más.
+    // Se ordena en PHP porque filtrar y ordenar por campos distintos en Firestore pide un índice compuesto.
+    public function avisosDelExcursionista(string $usuarioId): array
+    {
+        return collect($this->firestore->consultar('avisos', [['excursionistaId', '==', $usuarioId]]))
+            ->map($this->normalizar(...))
+            ->sortByDesc(fn ($a) => $a['salidaAt'] ?? null)
+            ->values()
+            ->all();
+    }
+
     // Crea la excursión y su aviso en una sola operación. Devuelve el ID.
     public function crear(array $datos, string $senderoId, string $jurisdiccionId): string
     {
@@ -82,6 +94,8 @@ class ExcursionRepository extends Repositorio
             'retornoAt' => $d['retornoAt'],
             'estado' => $d['estado'] instanceof EstadoExcursion ? $d['estado']->value : $d['estado'],
             'rescatistaId' => $texto($d['rescatistaId'] ?? ''),
+            // Quién creó la excursión ('' si la cargó el panel web o viene de los datos de ejemplo)
+            'excursionistaId' => $texto($d['excursionistaId'] ?? ''),
             'fotoUrl' => $texto($d['fotoUrl'] ?? ''),
             'detalle' => $texto($d['detalle'] ?? ''),
             'llevaCarpa' => (bool) ($d['llevaCarpa'] ?? false),

@@ -61,7 +61,7 @@ Pública. Máximo 5 intentos por minuto por correo e IP.
   "jurisdiccion_id": "jur-001"
 } }
 ```
-- `perfil`: `carabinero` o `rescatista`. Otros roles reciben **403**.
+- `perfil`: `carabinero`, `rescatista` o `excursionista` (app Flutter). Otros roles reciben **403**.
 - 422 si el correo o la contraseña son incorrectos.
 
 ### `GET /yo`
@@ -71,10 +71,80 @@ Devuelve quién es el usuario según el token: `{ "data": { "id", "rol", "jurisd
 204. No hay sesión en el servidor. La app cierra su sesión de Firebase (`signOut`).
 
 ### `GET /senderos`
-Roles: carabinero, rescatista. Para llenar selectores.
+Roles: carabinero, rescatista, excursionista. Para llenar selectores.
 ```json
 { "data": [ { "id": "sen-001", "nombre": "...", "jurisdiccion_id": "jur-001" } ] }
 ```
+
+## Excursionista (`/excursionista/...`)
+
+App Flutter. Solo ve y crea **sus propias** excursiones (las que tienen su id en `excursionistaId`). No lee Firestore: todo pasa por esta API.
+
+### `GET /excursionista/excursiones`
+Mis excursiones, las más recientes primero. Sin datos médicos.
+```json
+{ "data": [ {
+  "id": "exc-010", "sendero_id": "sen-001", "sendero": "PN Nahuelbuta - Piedra del Águila",
+  "estado": "planificada",
+  "salida_at": "2026-11-21T08:00:00-03:00", "retorno_at": "2026-11-21T16:00:00-03:00",
+  "contacto_nombre": "Paula Díaz", "contacto_telefono": "+56 9 5555 0108",
+  "detalle": null, "lleva_carpa": false, "color_carpa": null, "lleva_linterna": true,
+  "acompanantes": [ { "nombre": "Tomás Garrido", "rut": "20.000.015-5" } ],
+  "ultima_lat": null, "ultima_lng": null, "ultima_ubicacion_at": null, "bateria": null
+} ] }
+```
+
+### `POST /excursionista/excursiones`
+Avisa una salida. Queda `planificada`, sin rescatista. El nombre sale de la cuenta del token.
+
+```json
+{
+  "sendero_id": "sen-001",
+  "salida_at": "2026-11-21T08:00:00-03:00",
+  "retorno_at": "2026-11-21T16:00:00-03:00",
+  "contacto_nombre": "Paula Díaz", "contacto_telefono": "+56 9 5555 0108",
+  "rut": "20.000.004-4", "telefono": "+56 9 5555 0107", "edad": 23,
+  "experiencia": "Principiante", "condiciones_medicas": "Ninguna",
+  "detalle": "Polerón amarillo.", "lleva_carpa": false, "color_carpa": null, "lleva_linterna": true,
+  "acompanantes": [ { "nombre": "Tomás Garrido", "rut": "20.000.015-5", "edad": 23, "condiciones_medicas": "Ninguna" } ]
+}
+```
+- Obligatorios: `sendero_id`, `salida_at`, `retorno_at` (posterior a la salida), `contacto_nombre`, `contacto_telefono`, `rut`, `telefono`, `edad`, `experiencia` (`Principiante`, `Intermedio` o `Avanzado`).
+- Los datos personales (`rut`, `telefono`, `edad`, `experiencia`, `condiciones_medicas`) los envía la app: todavía no viven en el perfil del usuario.
+- Los acompañantes son sin cuenta (solo datos mínimos).
+- 201: `{ "data": { ...la excursión, igual que en el listado } }`
+- 422 si falta un dato o el `sendero_id` no existe.
+
+### `POST /excursionista/excursiones/{id}/{accion}`
+Cambia el estado de una excursión **propia**. `accion`:
+
+| accion | Estado actual → nuevo |
+|---|---|
+| `iniciar` | `planificada` → `en_curso` |
+| `regresar` | `en_curso` → `cerrada` ("Ya volví") |
+
+```json
+{ "estado_esperado": "planificada" }
+```
+200: `{ "data": { "id": "exc-010", "estado": "en_curso" } }`
+
+- `estado_esperado` es el estado que la app tiene en pantalla. Si ya cambió (por ejemplo, pasó a `en_alerta`), responde **409** "Tu excursión cambió de estado. Actualiza e intenta de nuevo."
+- **403** si la excursión no es suya. **409** si la acción no corresponde al estado actual.
+- `regresar` solo vale desde `en_curso`. Si la excursión ya está en alerta, la cierra el carabinero.
+
+### `POST /excursionista/excursiones/{id}/ubicacion`
+Guarda la última ubicación y la batería del teléfono. Se puede enviar mientras la excursión esté `en_curso`, `en_alerta`, `en_operativo` o `cierre_pendiente`.
+
+```json
+{ "lat": -37.8235, "lng": -73.0312, "bateria": 78 }
+```
+- `lat` entre -90 y 90, `lng` entre -180 y 180, `bateria` entero de 0 a 100 (opcional).
+- 200: `{ "data": { "id", "ultima_lat", "ultima_lng", "ultima_ubicacion_at", "bateria" } }`
+- **409** si la excursión no está en uno de esos estados (planificada o cerrada). **403** si no es suya.
+
+## Paso automático a alerta
+
+Ningún cliente pasa una excursión a `en_alerta`. Lo hace el comando programado `php artisan excursiones:marcar-alertas`: cada minuto pasa a `en_alerta` las excursiones `en_curso` cuya hora de retorno ya venció (y así aparecen en la bandeja del carabinero). Requiere el programador activo (`php artisan schedule:work`) o ejecutarlo a mano.
 
 ## Carabinero (`/carabinero/...`)
 
