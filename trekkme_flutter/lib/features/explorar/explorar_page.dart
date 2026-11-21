@@ -33,7 +33,11 @@ class _ExplorarPageState extends State<ExplorarPage> {
     return (results[0] as List<Trail>, results[1] as List<Viewpoint>);
   }
 
-  void _reload() => setState(() => _data = _load());
+  void _reload() {
+    setState(() {
+      _data = _load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

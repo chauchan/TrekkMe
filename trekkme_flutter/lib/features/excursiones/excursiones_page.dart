@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/excursion_repository.dart';
 import '../../models/excursion.dart';
+import '../aviso/aviso_page.dart';
 import '../explorar/explorar_page.dart';
 
 /// Home del trekker: sus excursiones con el estado actual (F3).
@@ -32,8 +33,22 @@ class _ExcursionesPageState extends State<ExcursionesPage> {
 
   Future<void> _recargar() async {
     final nuevas = widget.repo.misExcursiones();
-    setState(() => _excursiones = nuevas);
+    setState(() {
+      _excursiones = nuevas;
+    });
     await nuevas;
+  }
+
+  Future<void> _avisarSalida() async {
+    final creada = await Navigator.push<Excursion>(
+      context,
+      MaterialPageRoute(builder: (_) => AvisoPage(repo: widget.repo)),
+    );
+    if (creada == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Salida avisada: ${creada.sendero.nombre}')),
+    );
+    await _recargar();
   }
 
   @override
@@ -57,6 +72,11 @@ class _ExcursionesPageState extends State<ExcursionesPage> {
             onPressed: widget.onLogout,
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _avisarSalida,
+        icon: const Icon(Icons.add),
+        label: const Text('Avisar salida'),
       ),
       body: FutureBuilder<List<Excursion>>(
         future: _excursiones,
